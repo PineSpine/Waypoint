@@ -4,6 +4,9 @@
 *.jpeg
 *.png
 
+# Backup-Ordner
+Backup/
+
 # Windows
 Thumbs.db
 desktop.ini
