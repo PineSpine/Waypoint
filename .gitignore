@@ -1,0 +1,14 @@
+# Eigene GPX-Dateien und Fotos
+*.gpx
+*.jpg
+*.jpeg
+*.png
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Editoren
+.vscode/
+*.swp
+*~
