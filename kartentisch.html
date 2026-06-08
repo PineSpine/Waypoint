@@ -358,7 +358,7 @@
 <div id="legend">
   <h4>Legende</h4>
   <div class="row"><span class="ch" style="border-top-color:#1f6fff"></span> Geplante Route</div>
-  <div class="row"><span class="ch" style="border-top-color:#2a241c;border-top-style:dashed"></span> Vater-GPX</div>
+  <div class="row"><span class="ch" style="border-top-color:#2a241c;border-top-style:dashed"></span> GPX-Overlay</div>
   <div class="row"><span class="ch" style="border-top-color:#3f8f4a;border-top-style:dotted"></span> Luftlinie (Fallback)</div>
   <div class="row">🏕️ Camping&nbsp;&nbsp;🛒 Markt&nbsp;&nbsp;💧 Wasser&nbsp;&nbsp;🔧 Fahrradladen</div>
 </div>
@@ -821,11 +821,11 @@
     var casing=L.polyline(pts,{color:'#fbf6ec',weight:7,opacity:.7});
     var dash=L.polyline(pts,{color:'#2a241c',weight:3,opacity:.85,dashArray:'1 7'});
     gpxLayer=L.layerGroup([casing,dash]).addTo(map);
-    L.marker(pts[0]).addTo(gpxLayer).bindPopup('Vater-GPX · Start');
-    L.marker(pts[pts.length-1]).addTo(gpxLayer).bindPopup('Vater-GPX · Ziel');
+    L.marker(pts[0]).addTo(gpxLayer).bindPopup('GPX-Track · Start');
+    L.marker(pts[pts.length-1]).addTo(gpxLayer).bindPopup('GPX-Track · Ziel');
     map.fitBounds(L.latLngBounds(pts),{padding:[40,40]});
     var sw=document.getElementById('lyrGpx'); sw.disabled=false; sw.checked=true;
-    setStatus('Vater-GPX geladen ('+pts.length+' Punkte) — als gestrichelte Linie überlagert.');
+    setStatus('GPX-Overlay geladen ('+pts.length+' Punkte) — als gestrichelte Linie überlagert.');
   }
 
   /* ---------------- GPX export ---------------- */
