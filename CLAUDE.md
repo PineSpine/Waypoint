@@ -49,10 +49,10 @@
   verwerfen), Distanz/Höhenmeter summieren. Engine-Auswahl im Dropdown als `engine|profile`.
 
 ## Konventionen / Vorlieben
-- **Toolleisten-Funktionsreihenfolge NICHT ändern** — nur Styling. Reihenfolge:
-  Zoom In · Zoom Out · Standort · Suche · Route zeichnen · Route umkehren · No-Go-Kreis ·
-  Bewegungsradius (ohne Gewähr) · letzten Punkt löschen · Routendaten löschen · POI ·
-  Steigungscodierung · Transparenz-Slider.
+- **Toolleisten-Funktionsreihenfolge NICHT ändern** — nur Styling. Aktuelle Reihenfolge:
+  Zoom In · Zoom Out · Standort · Suche · Route zeichnen · Wegpunkt einfügen · Route umkehren ·
+  No-Go-Kreis · Bewegungsradius (ohne Gewähr) · letzten Punkt löschen · Routendaten löschen ·
+  POI · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
 - Hauptpanel und Toolleiste: beide **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
 - Funktionalität bei Restyles erhalten.

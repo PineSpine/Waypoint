@@ -103,6 +103,16 @@
     box-shadow:0 4px 14px rgba(10,132,255,.4),inset 0 1px 0 rgba(255,255,255,.5)}
   .btn.active:hover{color:#fff;background:linear-gradient(180deg,#54b0ff,#1a8fff);
     box-shadow:0 6px 18px rgba(10,132,255,.5),inset 0 1px 0 rgba(255,255,255,.9)}
+  .day-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 11px;margin-bottom:6px;
+    border:1px solid var(--edge);border-radius:12px;background:var(--glass-tile);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:12.5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+  .day-row .d-day{font-family:'DM Mono',monospace;font-weight:500;color:var(--accent-deep)}
+  .day-row .d-meta{color:var(--ink-soft);font-size:11.5px;flex:1;text-align:center}
+  .day-row .d-asc{font-family:'DM Mono',monospace;font-weight:500}
+  .day-row.hard{border-color:rgba(232,96,44,.55);
+    background:linear-gradient(160deg,rgba(255,214,196,.55),rgba(255,255,255,.3))}
+  .day-row.hard .d-asc{color:var(--danger)}
   .btn-row{display:flex;gap:8px}
   .btn-row .btn{margin-bottom:0}
 
@@ -266,13 +276,18 @@
       </select>
       <input type="text" id="customProfile" placeholder="bikerouter-Profilname, z. B. cxb-gravel, mtb-light …" style="display:none;margin-top:7px;width:100%" />
       <input type="text" id="ghKey" placeholder="GraphHopper API-Key (kostenlos auf graphhopper.com)" style="display:none;margin-top:7px;width:100%" />
-      <p class="hint" style="margin-top:7px">① verifiziert. ② lädt das echte <code>quaelnix-gravel</code>-Profil hoch und routet auf dem verifizierten BRouter.de-Server (umgeht das CORS-Problem von bikerouter.de). ③ ist GraphHopper — Komoots Engine — und teilt lange Routen automatisch in 5-Punkt-Häppchen (Gratis-Tier-Limit); Gratis-Profile sind nur <code>bike</code>/<code>foot</code>. Schlägt etwas fehl, fällt die App sichtbar auf BRouter.de/Trekking zurück; bombensicher bleibt: auf bikerouter.de planen → GPX exportieren → hier reinziehen.</p>
+      <p class="hint" style="margin-top:7px"><code>①</code> BRouter.de — verifiziert. <code>②</code> Gravel „quaelnix" (Upload → BRouter.de, umgeht CORS). <code>③</code> GraphHopper/Komoot — nur <code>bike</code>/<code>foot</code>, stückelt lange Routen selbst. Bei Fehler: sichtbarer Fallback auf Trekking.</p>
       <div style="height:8px"></div>
       <label class="fld" for="interval">Etappen-Marker setzen alle … km</label>
       <div class="btn-row" style="align-items:stretch">
         <input type="number" id="interval" value="90" min="20" max="200" step="5" style="width:90px" />
         <button class="btn" id="stageBtn" style="margin:0;flex:1"><span class="ic">🚩</span>Etappen markieren</button>
       </div>
+    </div>
+
+    <div class="sec" id="stageBreakdownSec" style="display:none">
+      <div class="sec-h">Etappen-Höhenprofil</div>
+      <div id="stageBreakdown"></div>
     </div>
 
     <div class="sec">
@@ -318,10 +333,11 @@
     <button class="tb-btn" id="tReverse" title="Route umkehren"><svg viewBox="0 0 24 24"><path d="M7 8h11l-3.2-3.2M17 16H6l3.2 3.2"/></svg></button>
     <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
     <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
-    <button class="tb-btn" id="tDelLast" title="Letzten Punkt löschen"><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 5 5v1"/></svg></button>
+    <button class="tb-btn" id="tDelLast" title="Letzten Punkt löschen"><svg viewBox="0 0 24 24"><path d="M8 6L4 10l4 4"/><path d="M4 10h7a4 4 0 0 1 4 4v1"/><path d="M18.4 12.5c-1.6 0-2.9 1.3-2.9 2.9 0 2.1 2.9 5.1 2.9 5.1s2.9-3 2.9-5.1c0-1.6-1.3-2.9-2.9-2.9z" fill="currentColor" stroke="none"/></svg></button>
     <button class="tb-btn" id="tClear" title="Routendaten löschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg></button>
     <button class="tb-btn" id="tPoi" title="POI einzeichnen"><svg viewBox="0 0 24 24"><path d="M12 22s7-7.6 7-13a7 7 0 1 0-14 0c0 5.4 7 13 7 13z"/><circle cx="12" cy="9" r="2.4"/></svg></button>
     <button class="tb-btn" id="tGradient" title="Steigungscodierung"><svg viewBox="0 0 24 24"><path d="M3 19l6-9 4 5 3-4 5 8z"/></svg></button>
+    <button class="tb-btn" id="tUndo" title="Letzte Aktion rückgängig machen"><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 5 5v1"/></svg></button>
     <div class="tb-sep"></div>
     <div class="tb-slider-wrap" title="Transparenz von Route und Markern">
       <input type="range" id="tOpacity" min="10" max="100" value="100" orient="vertical" />
@@ -358,6 +374,7 @@
   var routeCoords=[];          // [[lat,lng],...] from router (for stages/export)
   var stageMarkers=[], poiMarkers=[], gpxLayer=null;
   var campMarkers=[], supplyMarkers=[];   // getrennt verwaltet, damit jede Kategorie einzeln ein-/ausblendbar ist
+  var undoStack=[];                        // Schnappschüsse der Wegpunktliste für „rückgängig"
   var routeDist=0, routeAsc=0;
   var mode='draw';                 // draw | nogo | radius | poi | none
   var nogos=[];                    // {lat,lng,radius,circle}
@@ -392,6 +409,7 @@
     var w={lat:lat,lng:lng,marker:m,name:name||''};
     if(typeof index==='number' && index>=0 && index<=waypoints.length){ waypoints.splice(index,0,w); }
     else { waypoints.push(w); }
+    m.on('dragstart',function(){ snapshot(); });
     m.on('dragend',function(){ var p=m.getLatLng(); w.lat=p.lat; w.lng=p.lng; w.name=''; recompute(); });
     m.on('click',function(e){ L.DomEvent.stop(e);
       var idx=waypoints.indexOf(w);
@@ -399,11 +417,28 @@
       var html='<b>'+ttl+'</b><br><span style="color:#5b5142">Wegpunkt '+(idx+1)+' · frei verschiebbar</span><br><button class="pop-add" id="delwp">Entfernen</button>';
       m.bindPopup(html).openPopup();
       setTimeout(function(){ var b=document.getElementById('delwp'); if(b) b.onclick=function(){
-        map.removeLayer(m); waypoints.splice(waypoints.indexOf(w),1); reindexWaypoints(); recompute(); }; },30);
+        snapshot(); map.removeLayer(m); waypoints.splice(waypoints.indexOf(w),1); reindexWaypoints(); recompute(); }; },30);
     });
     reindexWaypoints();
     if(!silent) recompute();
     return w;
+  }
+
+  /* ---------------- Undo: Schnappschüsse der Wegpunktliste ---------------- */
+  function snapshot(){
+    undoStack.push(waypoints.map(function(w){ return {lat:w.lat,lng:w.lng,name:w.name}; }));
+    if(undoStack.length>60) undoStack.shift();
+  }
+  function rebuildWaypoints(list){
+    waypoints.forEach(function(w){ map.removeLayer(w.marker); }); waypoints=[];
+    list.forEach(function(p){ addWaypoint(p.lat,p.lng,true,p.name); });
+    reindexWaypoints(); recompute();
+  }
+  function undo(){
+    if(!undoStack.length){ setStatus('Nichts mehr rückgängig zu machen.'); return; }
+    var prev=undoStack.pop();
+    rebuildWaypoints(prev);
+    setStatus('Rückgängig — '+prev.length+' Wegpunkt(e) wiederhergestellt. ('+undoStack.length+' Schritt(e) übrig)');
   }
 
   /* Abstand Punkt→Segment (equirektangulär, für kurze Distanzen in DE genau genug) */
@@ -428,6 +463,7 @@
   }
   /* Wegpunkt in den passenden Streckenabschnitt einfügen statt ans Ende anhängen */
   function addWaypointSmart(lat,lng,name){
+    snapshot();
     var idx=bestInsertIndex(lat,lng);
     var w=addWaypoint(lat,lng,false,name,idx);
     setStatus('Wegpunkt als Nr. '+(waypoints.indexOf(w)+1)+' in die Route eingefügt.');
@@ -610,32 +646,80 @@
   }
 
   /* ---------------- Stage markers ---------------- */
-  function clearStages(){ stageMarkers.forEach(function(m){map.removeLayer(m);}); stageMarkers=[];
-    document.getElementById('sStage').textContent='0'; }
+  function clearStages(){
+    stageMarkers.forEach(function(m){map.removeLayer(m);}); stageMarkers=[];
+    document.getElementById('sStage').textContent='0';
+    var b=document.getElementById('stageBtn'); if(b) b.classList.remove('active');
+    var sec=document.getElementById('stageBreakdownSec'); if(sec) sec.style.display='none';
+  }
+  /* Toggle wie bei Camping/Versorgung: gesetzt → ausblenden, sonst neu setzen */
+  function toggleStages(){
+    if(stageMarkers.length){ clearStages(); setStatus('Etappen-Marker ausgeblendet.'); return; }
+    placeStages();
+  }
+  function renderStageBreakdown(buckets, withEle){
+    var sec=document.getElementById('stageBreakdownSec'), box=document.getElementById('stageBreakdown');
+    if(!sec||!box) return;
+    if(!buckets.length){ sec.style.display='none'; return; }
+    var maxAsc=0; if(withEle) buckets.forEach(function(b){ if(b.asc>maxAsc) maxAsc=b.asc; });
+    var html='';
+    buckets.forEach(function(b,i){
+      var hard=withEle && maxAsc>0 && b.asc===maxAsc;
+      html+='<div class="day-row'+(hard?' hard':'')+'">'+
+        '<span class="d-day">Tag '+(i+1)+'</span>'+
+        '<span class="d-meta">'+(b.dist/1000).toFixed(0)+' km</span>'+
+        '<span class="d-asc">'+(withEle?('↑ '+Math.round(b.asc)+' Hm'):'↑ –')+'</span>'+
+      '</div>';
+    });
+    html+='<div class="hint" style="margin-top:4px">'+(withEle
+      ? 'Härtester Tag hervorgehoben. Höhenmeter je Etappe ≈, auf den Gesamtwert der Route abgeglichen.'
+      : 'Höhenmeter erscheinen, sobald die Route mit Höhendaten berechnet ist (BRouter/GraphHopper liefern sie).')+'</div>';
+    box.innerHTML=html;
+    sec.style.display='';
+  }
   function placeStages(){
     clearStages();
     if(routeCoords.length<2){ setStatus('Erst eine Route anlegen, dann Etappen markieren.','err'); return; }
     var step=parseFloat(document.getElementById('interval').value)*1000;
     if(!step||step<1000){ setStatus('Ungültiges Etappen-Intervall.','err'); return; }
+    var withEle=hasEle(routeCoords);
+    var buckets=[];                                   // [{dist,asc}] je Fahrtag
+    function bucket(i){ while(buckets.length<=i) buckets.push({dist:0,asc:0}); return buckets[i]; }
+    var marks=[];                                     // {lat,lng,km,day} — Marker erst nach Skalierung setzen
     var acc=0, next=step, n=0;
     for(var i=1;i<routeCoords.length;i++){
-      var seg=haversine(routeCoords[i-1],routeCoords[i]);
+      var a=routeCoords[i-1], b=routeCoords[i];
+      var seg=haversine(a,b);
+      var bk=bucket(Math.floor(acc/step));            // Mikrosegment dem Tag seines Startpunkts zuordnen
+      bk.dist+=seg;
+      if(withEle){ var de=(b[2]||0)-(a[2]||0); if(de>0) bk.asc+=de; }
       while(acc+seg>=next){
         var t=(next-acc)/seg;
-        var lat=routeCoords[i-1][0]+(routeCoords[i][0]-routeCoords[i-1][0])*t;
-        var lng=routeCoords[i-1][1]+(routeCoords[i][1]-routeCoords[i-1][1])*t;
         n++;
-        var km=Math.round(next/1000);
-        var fm=L.marker([lat,lng],{icon:L.divIcon({className:'',
-          html:'<div class="stage-flag">'+km+'</div>',iconSize:[34,22],iconAnchor:[17,11]})}).addTo(map);
-        fm.bindPopup('<b>≈ Etappenende</b><br>'+km+' km ab Start<br><span style="color:#5b5142">Tag '+(n)+' Richtwert</span>');
-        stageMarkers.push(fm);
+        marks.push({lat:a[0]+(b[0]-a[0])*t, lng:a[1]+(b[1]-a[1])*t, km:Math.round(next/1000), day:n});
         next+=step;
       }
       acc+=seg;
     }
+    // Rohe Summe positiver Deltas zählt Messrauschen mit → auf den gefilterten Routen-Gesamtwert
+    // (routeAsc, identisch zur Statistik) skalieren, damit Tagessummen und Headline zusammenpassen.
+    var rawTotal=0; buckets.forEach(function(b){ rawTotal+=b.asc; });
+    var factor=(withEle && rawTotal>0 && routeAsc>0) ? routeAsc/rawTotal : 1;
+    buckets.forEach(function(b){ b.asc*=factor; });
+    marks.forEach(function(mk){
+      var dayAsc=buckets[mk.day-1]?Math.round(buckets[mk.day-1].asc):null;
+      var pop='<b>≈ Etappenende Tag '+mk.day+'</b><br>'+mk.km+' km ab Start';
+      if(withEle && dayAsc!=null) pop+='<br><span style="color:#5b5142">Tag '+mk.day+': ↑ '+dayAsc+' Hm</span>';
+      var fm=L.marker([mk.lat,mk.lng],{icon:L.divIcon({className:'',
+        html:'<div class="stage-flag">'+mk.km+'</div>',iconSize:[34,22],iconAnchor:[17,11]})}).addTo(map);
+      fm.bindPopup(pop);
+      stageMarkers.push(fm);
+    });
     document.getElementById('sStage').textContent=(n+1);
-    setStatus(n+' Etappen-Marker gesetzt (alle '+(step/1000)+' km) · ~'+(n+1)+' Fahrtage.');
+    document.getElementById('stageBtn').classList.add('active');
+    renderStageBreakdown(buckets, withEle);
+    setStatus(n+' Etappen-Marker gesetzt (alle '+(step/1000)+' km) · ~'+(n+1)+' Fahrtage'+
+      (withEle?' · Höhenmeter je Etappe im Panel & Popup.':' · Höhendaten erst nach Neuberechnung.'));
   }
 
   /* ---------------- Overpass: camping & supply ---------------- */
@@ -794,7 +878,7 @@
 
   /* ---------------- Wire up UI ---------------- */
   map.on('click',function(e){
-    if(mode==='draw') addWaypoint(e.latlng.lat,e.latlng.lng);
+    if(mode==='draw'){ snapshot(); addWaypoint(e.latlng.lat,e.latlng.lng); }
     else if(mode==='insert') addWaypointSmart(e.latlng.lat,e.latlng.lng);
     else if(mode==='nogo') addNogo(e.latlng);
     else if(mode==='radius') setRadius(e.latlng);
@@ -811,7 +895,7 @@
   };
   document.getElementById('customProfile').oninput=function(){ recompute(); };
   document.getElementById('ghKey').oninput=function(){ recompute(); };
-  document.getElementById('stageBtn').onclick=placeStages;
+  document.getElementById('stageBtn').onclick=toggleStages;
   document.getElementById('campBtn').onclick=loadCamping;
   document.getElementById('supBtn').onclick=loadSupply;
   document.getElementById('exportBtn').onclick=exportGpx;
@@ -820,6 +904,7 @@
     var rd=new FileReader(); rd.onload=function(){ loadGpxText(rd.result); }; rd.readAsText(f); };
 
   function clearAll(){
+    if(waypoints.length) snapshot();
     waypoints.forEach(function(w){map.removeLayer(w.marker);}); waypoints=[];
     nogos.forEach(function(n){map.removeLayer(n.circle);map.removeLayer(n.center);}); nogos=[];
     pois.forEach(function(p){map.removeLayer(p.marker);}); pois=[];
@@ -831,7 +916,7 @@
     clearRouteGeom(); clearStages(); routeDist=0;routeAsc=0;updateStats();
     reindexWaypoints(); setStatus('Routendaten gelöscht.');
   }
-  function delLast(){ if(!waypoints.length)return; var w=waypoints.pop(); map.removeLayer(w.marker); reindexWaypoints(); recompute(); }
+  function delLast(){ if(!waypoints.length)return; snapshot(); var w=waypoints.pop(); map.removeLayer(w.marker); reindexWaypoints(); recompute(); }
 
   /* ---- Toolbar buttons ---- */
   function setMode(m,btnId){
@@ -868,10 +953,11 @@
   document.getElementById('tDraw').onclick=function(){ setMode('draw','tDraw'); };
   document.getElementById('tInsert').onclick=function(){ setMode('insert','tInsert'); };
   document.getElementById('tReverse').onclick=function(){
-    if(waypoints.length<2)return; waypoints.reverse(); reindexWaypoints(); recompute(); setStatus('Route umgekehrt.'); };
+    if(waypoints.length<2)return; snapshot(); waypoints.reverse(); reindexWaypoints(); recompute(); setStatus('Route umgekehrt.'); };
   document.getElementById('tNogo').onclick=function(){ setMode('nogo','tNogo'); };
   document.getElementById('tRadius').onclick=function(){ setMode('radius','tRadius'); };
   document.getElementById('tDelLast').onclick=delLast;
+  document.getElementById('tUndo').onclick=undo;
   document.getElementById('tClear').onclick=clearAll;
   document.getElementById('tPoi').onclick=function(){ setMode('poi','tPoi'); };
   document.getElementById('tGradient').onclick=function(){
