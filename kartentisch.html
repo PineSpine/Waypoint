@@ -1,6 +1,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>Der Kartentisch — Hannover → Berchtesgaden</title>
+<title>Waypoint — Hannover → Berchtesgaden</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -99,6 +99,10 @@
   .btn:active{transform:none;box-shadow:inset 0 2px 6px rgba(16,38,70,.18)}
   .btn .ic{font-size:15px;width:19px;text-align:center}
   .btn.warn:hover{color:var(--danger);border-color:rgba(232,96,44,.5)}
+  .btn.active{background:linear-gradient(180deg,#43a6ff,#0a84ff);color:#fff;border-color:rgba(255,255,255,.7);
+    box-shadow:0 4px 14px rgba(10,132,255,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+  .btn.active:hover{color:#fff;background:linear-gradient(180deg,#54b0ff,#1a8fff);
+    box-shadow:0 6px 18px rgba(10,132,255,.5),inset 0 1px 0 rgba(255,255,255,.9)}
   .btn-row{display:flex;gap:8px}
   .btn-row .btn{margin-bottom:0}
 
@@ -225,7 +229,7 @@
 <div id="panel">
   <div class="head">
     <p class="kicker">Bikepacking · Sommer ’26</p>
-    <h1 class="title">Der Kartentisch</h1>
+    <h1 class="title">Waypoint</h1>
     <div class="route-line">HANNOVER ──▶ WEIMAR ──▶ BERCHTESGADEN</div>
     <button class="toggle" id="minBtn" title="Panel ein-/ausklappen">–</button>
   </div>
@@ -274,7 +278,7 @@
     <div class="sec">
       <div class="sec-h">Auf der Karte laden</div>
       <button class="btn" id="campBtn"><span class="ic">🏕️</span>Campingplätze (aktueller Ausschnitt)</button>
-      <button class="btn" id="supBtn"><span class="ic">🛒</span>Versorgung: Supermarkt · Wasser · Radladen</button>
+      <button class="btn" id="supBtn"><span class="ic">🛒</span>Versorgung: Supermarkt · Wasser · Fahrradladen</button>
       <div class="hint">Tipp: erst in die Region zoomen, dann laden — gesucht wird im sichtbaren Kartenausschnitt. Jeder Treffer hat einen direkten Google-Maps-Link.</div>
     </div>
 
@@ -310,6 +314,7 @@
     <button class="tb-btn" id="tSearch" title="Suche (Ort/Adresse)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     <div class="tb-sep"></div>
     <button class="tb-btn" id="tDraw" title="Route zeichnen"><svg viewBox="0 0 24 24"><path d="M4 20l3.6-.9L18.5 8.2l-2.7-2.7L4.9 16.4z"/><path d="M14.5 6.5l3 3"/></svg></button>
+    <button class="tb-btn" id="tInsert" title="Wegpunkt zwischen zwei bestehende einfügen"><svg viewBox="0 0 24 24"><path d="M3 19h18"/><circle cx="3" cy="19" r="1.6" fill="currentColor" stroke="none"/><circle cx="21" cy="19" r="1.6" fill="currentColor" stroke="none"/><path d="M12 4v9M7.5 8.5h9"/></svg></button>
     <button class="tb-btn" id="tReverse" title="Route umkehren"><svg viewBox="0 0 24 24"><path d="M7 8h11l-3.2-3.2M17 16H6l3.2 3.2"/></svg></button>
     <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
     <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
@@ -330,7 +335,7 @@
   <div class="row"><span class="ch" style="border-top-color:#1f6fff"></span> Geplante Route</div>
   <div class="row"><span class="ch" style="border-top-color:#2a241c;border-top-style:dashed"></span> Vater-GPX</div>
   <div class="row"><span class="ch" style="border-top-color:#3f8f4a;border-top-style:dotted"></span> Luftlinie (Fallback)</div>
-  <div class="row">🏕️ Camping&nbsp;&nbsp;🛒 Markt&nbsp;&nbsp;💧 Wasser&nbsp;&nbsp;🔧 Radladen</div>
+  <div class="row">🏕️ Camping&nbsp;&nbsp;🛒 Markt&nbsp;&nbsp;💧 Wasser&nbsp;&nbsp;🔧 Fahrradladen</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -352,6 +357,7 @@
   var routeLine=null, routeCasing=null;
   var routeCoords=[];          // [[lat,lng],...] from router (for stages/export)
   var stageMarkers=[], poiMarkers=[], gpxLayer=null;
+  var campMarkers=[], supplyMarkers=[];   // getrennt verwaltet, damit jede Kategorie einzeln ein-/ausblendbar ist
   var routeDist=0, routeAsc=0;
   var mode='draw';                 // draw | nogo | radius | poi | none
   var nogos=[];                    // {lat,lng,radius,circle}
@@ -381,9 +387,11 @@
     document.getElementById('sWp').textContent = waypoints.length;
   }
 
-  function addWaypoint(lat,lng,silent,name){
+  function addWaypoint(lat,lng,silent,name,index){
     var m=L.marker([lat,lng],{icon:wpIcon(waypoints.length),draggable:true}).addTo(map);
-    var w={lat:lat,lng:lng,marker:m,name:name||''}; waypoints.push(w);
+    var w={lat:lat,lng:lng,marker:m,name:name||''};
+    if(typeof index==='number' && index>=0 && index<=waypoints.length){ waypoints.splice(index,0,w); }
+    else { waypoints.push(w); }
     m.on('dragend',function(){ var p=m.getLatLng(); w.lat=p.lat; w.lng=p.lng; w.name=''; recompute(); });
     m.on('click',function(e){ L.DomEvent.stop(e);
       var idx=waypoints.indexOf(w);
@@ -395,6 +403,34 @@
     });
     reindexWaypoints();
     if(!silent) recompute();
+    return w;
+  }
+
+  /* Abstand Punkt→Segment (equirektangulär, für kurze Distanzen in DE genau genug) */
+  function distToSegment(p,a,b){
+    var kx=Math.cos(a[0]*Math.PI/180);
+    var px=p[1]*kx, py=p[0], ax=a[1]*kx, ay=a[0], bx=b[1]*kx, by=b[0];
+    var dx=bx-ax, dy=by-ay, len2=dx*dx+dy*dy;
+    var t=len2>0 ? ((px-ax)*dx+(py-ay)*dy)/len2 : 0;
+    t=Math.max(0,Math.min(1,t));
+    var ex=px-(ax+t*dx), ey=py-(ay+t*dy);
+    return Math.sqrt(ex*ex+ey*ey);
+  }
+  /* Index, an dem ein neuer Punkt sinnvoll zwischen zwei bestehende Wegpunkte gehört */
+  function bestInsertIndex(lat,lng){
+    if(waypoints.length<2) return waypoints.length;
+    var p=[lat,lng], best=Infinity, bi=waypoints.length;
+    for(var i=0;i<waypoints.length-1;i++){
+      var d=distToSegment(p,[waypoints[i].lat,waypoints[i].lng],[waypoints[i+1].lat,waypoints[i+1].lng]);
+      if(d<best){ best=d; bi=i+1; }
+    }
+    return bi;
+  }
+  /* Wegpunkt in den passenden Streckenabschnitt einfügen statt ans Ende anhängen */
+  function addWaypointSmart(lat,lng,name){
+    var idx=bestInsertIndex(lat,lng);
+    var w=addWaypoint(lat,lng,false,name,idx);
+    setStatus('Wegpunkt als Nr. '+(waypoints.indexOf(w)+1)+' in die Route eingefügt.');
     return w;
   }
 
@@ -626,11 +662,18 @@
       '<button class="pop-add">+ Als Wegpunkt</button>';
     m.bindPopup(html);
     m.on('popupopen',function(){ var b=m.getPopup().getElement().querySelector('.pop-add');
-      if(b) b.onclick=function(){ addWaypoint(lat,lng); m.closePopup(); }; });
+      if(b) b.onclick=function(){ addWaypointSmart(lat,lng,name||sub); m.closePopup(); }; });
     poiMarkers.push(m); return m;
   }
 
+  /* Marker einer Kategorie wieder von Karte und Opacity-Liste entfernen */
+  function unloadGroup(group){
+    group.forEach(function(m){ map.removeLayer(m); var i=poiMarkers.indexOf(m); if(i>=0) poiMarkers.splice(i,1); });
+    group.length=0;
+  }
   function loadCamping(){
+    var btn=document.getElementById('campBtn');
+    if(campMarkers.length){ unloadGroup(campMarkers); btn.classList.remove('active'); setStatus('Campingplätze ausgeblendet.'); return; }
     if(map.getZoom()<8){ setStatus('Bitte näher heranzoomen (Region), dann Campingplätze laden.','err'); return; }
     setStatus('Suche Campingplätze im Ausschnitt …','busy');
     var bb=bboxStr();
@@ -638,11 +681,14 @@
     overpass(q).then(function(d){
       var n=0;
       d.elements.forEach(function(el){ var c=elCoord(el); if(!c)return;
-        poiMarker(c[0],c[1],'🏕️','#3f5e36',el.tags&&el.tags.name,'Campingplatz'); n++; });
-      setStatus(n?(n+' Campingplätze geladen — Marker mit Google-Maps-Link.'):'Keine Campingplätze in diesem Ausschnitt gefunden.');
+        campMarkers.push(poiMarker(c[0],c[1],'🏕️','#3f5e36',el.tags&&el.tags.name,'Campingplatz')); n++; });
+      if(n){ btn.classList.add('active'); }
+      setStatus(n?(n+' Campingplätze geladen — erneut klicken blendet sie wieder aus.'):'Keine Campingplätze in diesem Ausschnitt gefunden.');
     }).catch(function(){ setStatus('Overpass nicht erreichbar — später erneut versuchen.','err'); });
   }
   function loadSupply(){
+    var btn=document.getElementById('supBtn');
+    if(supplyMarkers.length){ unloadGroup(supplyMarkers); btn.classList.remove('active'); setStatus('Versorgung ausgeblendet.'); return; }
     if(map.getZoom()<11){ setStatus('Für Versorgung bitte stärker zoomen (Stadt/Etappe).','err'); return; }
     setStatus('Suche Versorgung im Ausschnitt …','busy');
     var bb=bboxStr();
@@ -654,14 +700,15 @@
     overpass(q).then(function(d){
       var n=0;
       d.elements.forEach(function(el){ var c=elCoord(el); if(!c)return; var t=el.tags||{};
-        if(t.shop==='supermarket'){ poiMarker(c[0],c[1],'🛒','#bf4b29',t.name,'Supermarkt'); }
-        else if(t.amenity==='drinking_water'){ poiMarker(c[0],c[1],'💧','#2f6f93','Trinkwasser','Wasserstelle'); }
-        else if(t.shop==='bicycle'){ poiMarker(c[0],c[1],'🔧','#c7892a',t.name,'Fahrradladen'); }
+        if(t.shop==='supermarket'){ supplyMarkers.push(poiMarker(c[0],c[1],'🛒','#bf4b29',t.name,'Supermarkt')); }
+        else if(t.amenity==='drinking_water'){ supplyMarkers.push(poiMarker(c[0],c[1],'💧','#2f6f93','Trinkwasser','Wasserstelle')); }
+        else if(t.shop==='bicycle'){ supplyMarkers.push(poiMarker(c[0],c[1],'🔧','#c7892a',t.name,'Fahrradladen')); }
+        else return;
         n++; });
-      setStatus(n?(n+' Versorgungspunkte geladen.'):'Keine Versorgungspunkte in diesem Ausschnitt.');
+      if(n){ btn.classList.add('active'); }
+      setStatus(n?(n+' Versorgungspunkte geladen — erneut klicken blendet sie wieder aus.'):'Keine Versorgungspunkte in diesem Ausschnitt.');
     }).catch(function(){ setStatus('Overpass nicht erreichbar — später erneut versuchen.','err'); });
   }
-  function clearPois(){ poiMarkers.forEach(function(m){map.removeLayer(m);}); poiMarkers=[]; }
 
   /* ---------------- GPX import ---------------- */
   function parseGpx(text){
@@ -692,7 +739,7 @@
   function exportGpx(){
     if(routeCoords.length<2){ setStatus('Noch keine Route zum Exportieren.','err'); return; }
     var x='<?xml version="1.0" encoding="UTF-8"?>\n';
-    x+='<gpx version="1.1" creator="Der Kartentisch" xmlns="http://www.topografix.com/GPX/1/1">\n';
+    x+='<gpx version="1.1" creator="Waypoint" xmlns="http://www.topografix.com/GPX/1/1">\n';
     x+='<metadata><name>Hannover - Berchtesgaden</name></metadata>\n';
     waypoints.forEach(function(w,i){ x+='<wpt lat="'+w.lat.toFixed(6)+'" lon="'+w.lng.toFixed(6)+'"><name>WP'+(i+1)+'</name></wpt>\n'; });
     x+='<trk><name>Route</name><trkseg>\n';
@@ -748,6 +795,7 @@
   /* ---------------- Wire up UI ---------------- */
   map.on('click',function(e){
     if(mode==='draw') addWaypoint(e.latlng.lat,e.latlng.lng);
+    else if(mode==='insert') addWaypointSmart(e.latlng.lat,e.latlng.lng);
     else if(mode==='nogo') addNogo(e.latlng);
     else if(mode==='radius') setRadius(e.latlng);
     else if(mode==='poi') addPoi(e.latlng);
@@ -774,7 +822,11 @@
   function clearAll(){
     waypoints.forEach(function(w){map.removeLayer(w.marker);}); waypoints=[];
     nogos.forEach(function(n){map.removeLayer(n.circle);map.removeLayer(n.center);}); nogos=[];
-    pois.forEach(function(p){map.removeLayer(p.marker);}); pois=[]; poiMarkers=[];
+    pois.forEach(function(p){map.removeLayer(p.marker);}); pois=[];
+    poiMarkers.forEach(function(m){map.removeLayer(m);}); poiMarkers=[];
+    campMarkers.length=0; supplyMarkers.length=0;
+    document.getElementById('campBtn').classList.remove('active');
+    document.getElementById('supBtn').classList.remove('active');
     if(radiusCircle){map.removeLayer(radiusCircle);radiusCircle=null;}
     clearRouteGeom(); clearStages(); routeDist=0;routeAsc=0;updateStats();
     reindexWaypoints(); setStatus('Routendaten gelöscht.');
@@ -783,11 +835,11 @@
 
   /* ---- Toolbar buttons ---- */
   function setMode(m,btnId){
-    var toggles=['tDraw','tNogo','tRadius','tPoi'];
+    var toggles=['tDraw','tInsert','tNogo','tRadius','tPoi'];
     if(mode===m){ mode='none'; } else { mode=m; }
     toggles.forEach(function(id){ document.getElementById(id).classList.toggle('active', document.getElementById(id)===document.getElementById(btnId) && mode===m); });
     map.getContainer().style.cursor = mode==='none' ? '' : 'crosshair';
-    var msg={draw:'Modus „Route zeichnen": Klick setzt Wegpunkte.',nogo:'Modus „No-Go-Gebiet": Klick setzt ein Sperrgebiet (Radius im Popup anpassbar).',radius:'Modus „Bewegungsradius": Klick setzt einen '+radiusKm+'-km-Kreis (ohne Gewähr).',poi:'Modus „POI": Klick setzt einen eigenen Punkt.',none:'Modus aus — Karte frei verschiebbar.'};
+    var msg={draw:'Modus „Route zeichnen": Klick setzt Wegpunkte.',insert:'Modus „Wegpunkt einfügen": Klick fügt den Punkt in den nächstgelegenen Streckenabschnitt ein.',nogo:'Modus „No-Go-Gebiet": Klick setzt ein Sperrgebiet (Radius im Popup anpassbar).',radius:'Modus „Bewegungsradius": Klick setzt einen '+radiusKm+'-km-Kreis (ohne Gewähr).',poi:'Modus „POI": Klick setzt einen eigenen Punkt.',none:'Modus aus — Karte frei verschiebbar.'};
     setStatus(msg[mode]||msg.none);
   }
   document.getElementById('tZoomIn').onclick=function(){ map.zoomIn(); };
@@ -814,6 +866,7 @@
       }).catch(function(){ setStatus('Suche nicht erreichbar.','err'); });
   };
   document.getElementById('tDraw').onclick=function(){ setMode('draw','tDraw'); };
+  document.getElementById('tInsert').onclick=function(){ setMode('insert','tInsert'); };
   document.getElementById('tReverse').onclick=function(){
     if(waypoints.length<2)return; waypoints.reverse(); reindexWaypoints(); recompute(); setStatus('Route umgekehrt.'); };
   document.getElementById('tNogo').onclick=function(){ setMode('nogo','tNogo'); };
