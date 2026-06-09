@@ -519,14 +519,37 @@
     if(s< 0.02) return '#2f8fd0'; if(s< 0.045) return '#e0a52b';
     if(s< 0.075) return '#e8602c'; return '#c62828';
   }
+  /* Steigungscodierung in voller Geometrie (kein Downsampling).
+     Performance wie brouter-web: Canvas-Renderer statt SVG-DOM — alle Farbabschnitte
+     teilen sich ein einziges <canvas>. Steigung wird über ein ±60-m-Distanzfenster
+     geglättet (Punkt-zu-Punkt wäre bei voller Auflösung verrauscht), dann werden
+     aufeinanderfolgende Punkte gleicher Farbklasse zu einer Polyline gebündelt. */
+  var gradientRenderer=null;
   function drawGradient(coords){
-    var step=Math.max(1, Math.floor(coords.length/1200));
-    var segs=[];
-    for(var i=step;i<coords.length;i+=step){
-      var a=coords[i-step], b=coords[i];
-      var d=haversine(a,b)||1, de=(b[2]||0)-(a[2]||0);
-      segs.push(L.polyline([[a[0],a[1]],[b[0],b[1]]],{color:slopeColor(de/d),weight:6,
-        opacity:0.95*routeOpacity,lineCap:'round'}));
+    if(!gradientRenderer) gradientRenderer=L.canvas({padding:0.4});
+    var n=coords.length;
+    var cum=new Array(n); cum[0]=0;
+    for(var i=1;i<n;i++) cum[i]=cum[i-1]+(haversine(coords[i-1],coords[i])||0);
+    var WIN=60;                       // Meter Glättungsfenster je Seite
+    var colors=new Array(n-1);
+    var j1=0, j2=0;
+    for(var i=1;i<n;i++){
+      var mid=(cum[i-1]+cum[i])/2;
+      while(j1<n-1 && cum[j1+1]<=mid-WIN) j1++;
+      if(j2<i) j2=i;
+      while(j2<n-1 && cum[j2]<mid+WIN) j2++;
+      var d=cum[j2]-cum[j1]||1, de=(coords[j2][2]||0)-(coords[j1][2]||0);
+      colors[i-1]=slopeColor(de/d);
+    }
+    var segs=[], runStart=0;
+    for(var i=1;i<=colors.length;i++){
+      if(i===colors.length || colors[i]!==colors[runStart]){
+        var pts=[];
+        for(var k=runStart;k<=i;k++) pts.push([coords[k][0],coords[k][1]]);
+        segs.push(L.polyline(pts,{color:colors[runStart],weight:6,opacity:0.95*routeOpacity,
+          lineCap:'round',lineJoin:'round',renderer:gradientRenderer}));
+        runStart=i;
+      }
     }
     gradientLayer=L.layerGroup(segs).addTo(map);
   }
