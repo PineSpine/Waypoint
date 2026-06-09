@@ -91,6 +91,14 @@
     border-radius:50%;background:var(--accent);color:#fff;font-family:'DM Mono',monospace;font-size:10px;
     font-weight:500;line-height:1;vertical-align:-2px;margin-right:2px}
   .hint p{margin:0 0 6px} .hint p:last-child{margin-bottom:0}
+  details.hint-acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;
+    font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.04em;color:var(--accent-deep);
+    padding:8px 11px;border:1px solid var(--edge);border-radius:13px;background:var(--glass-tile);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:inset 0 1px 0 rgba(255,255,255,.7);transition:.14s}
+  details.hint-acc>summary::-webkit-details-marker{display:none}
+  details.hint-acc>summary::before{content:"▸";font-size:9px;transition:transform .15s}
+  details.hint-acc[open]>summary::before{transform:rotate(90deg)}
+  details.hint-acc>summary:hover{background:rgba(255,255,255,.7)}
 
   .btn{
     width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
@@ -279,12 +287,15 @@
       </select>
       <input type="text" id="customProfile" placeholder="bikerouter-Profilname, z. B. cxb-gravel, mtb-light …" style="display:none;margin-top:7px;width:100%" />
       <input type="text" id="ghKey" placeholder="GraphHopper API-Key (kostenlos auf graphhopper.com)" style="display:none;margin-top:7px;width:100%" />
-      <div class="hint" style="margin-top:7px">
-        <p><span class="num">1</span><b>BRouter.de</b> — die verifizierte Standard-Engine (Open Source).</p>
-        <p><span class="num">2</span><b>Gravel „quaelnix"</b> — wird zur Laufzeit auf BRouter.de hochgeladen und umgeht so dessen CORS-Sperre.</p>
-        <p><span class="num">3</span><b>GraphHopper</b> (die Engine hinter Komoot) — nur die Profile <code>bike</code> und <code>foot</code>; lange Routen werden automatisch in 5-Punkt-Abschnitte zerlegt.</p>
-        <p>Schlägt eine Engine fehl, schaltet die App sichtbar auf BRouter.de/Trekking zurück.</p>
-      </div>
+      <details class="hint-acc" style="margin-top:7px">
+        <summary>Engines &amp; Profile — kurz erklärt</summary>
+        <div class="hint" style="margin-top:7px">
+          <p><span class="num">1</span><b>BRouter.de</b> — die verifizierte Standard-Engine (Open Source).</p>
+          <p><span class="num">2</span><b>Gravel „quaelnix"</b> — wird zur Laufzeit auf BRouter.de hochgeladen und umgeht so dessen CORS-Sperre.</p>
+          <p><span class="num">3</span><b>GraphHopper</b> (die Engine hinter Komoot) — nur die Profile <code>bike</code> und <code>foot</code>; lange Routen werden automatisch in 5-Punkt-Abschnitte zerlegt.</p>
+          <p>Schlägt eine Engine fehl, schaltet die App sichtbar auf BRouter.de/Trekking zurück.</p>
+        </div>
+      </details>
       <div style="height:8px"></div>
       <label class="fld" for="interval">Etappen-Marker setzen alle … km</label>
       <div class="btn-row" style="align-items:stretch">
@@ -384,7 +395,7 @@
   var campMarkers=[], supplyMarkers=[];   // getrennt verwaltet, damit jede Kategorie einzeln ein-/ausblendbar ist
   var undoStack=[];                        // Schnappschüsse der Wegpunktliste für „rückgängig"
   var routeDist=0, routeAsc=0;
-  var mode='draw';                 // draw | nogo | radius | poi | none
+  var mode='none';                 // draw | nogo | radius | poi | none — Start: Karte frei beweglich
   var nogos=[];                    // {lat,lng,radius,circle}
   var pois=[];                     // {lat,lng,name,marker}
   var radiusCircle=null, radiusKm=15;
@@ -637,7 +648,7 @@
   function doRoute(){
     clearStages();
     if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0;updateStats();
-      setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. „Route zeichnen" aktiv: klicke auf die Karte.'); return; }
+      setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. Für Wegpunkte „Route zeichnen" in der Toolleiste aktivieren.'); return; }
     var eng=currentEngine();
     if(eng.engine==='graphhopper'){ routeGraphHopper(eng.profile); return; }
     if(eng.engine==='upload'){ routeUpload(eng.profile, RAW_URLS[eng.profile]); return; }
