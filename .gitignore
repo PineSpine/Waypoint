@@ -7,6 +7,9 @@
 # Backup-Ordner
 Backup/
 
+# Troubleshooting-Ordner
+Troubleshooting/
+
 # Claude Code: lokale, maschinenspezifische Einstellungen
 .claude/settings.local.json
 
