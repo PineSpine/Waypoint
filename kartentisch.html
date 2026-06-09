@@ -1,6 +1,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>Waypoint — Hannover → Berchtesgaden</title>
+<title>Waypoint</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -67,6 +67,20 @@
   .toggle:hover{background:rgba(255,255,255,.8)}
 
   .body{padding:15px 17px 19px;overflow-y:auto}
+  /* Liquid-Glass-Scrollbar (Hauptpanel) — Webkit/Chromium/Vivaldi.
+     KEINE scrollbar-width/scrollbar-color setzen: das würde in Chromium die
+     ::-webkit-scrollbar-Gestaltung deaktivieren. */
+  .body::-webkit-scrollbar{width:13px}
+  .body::-webkit-scrollbar-track{background:transparent;margin:8px 0}
+  .body::-webkit-scrollbar-thumb{
+    border:2px solid transparent;background-clip:padding-box;border-radius:12px;
+    background-image:linear-gradient(180deg,rgba(255,255,255,.92),rgba(125,188,255,.74));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.98),inset 0 0 0 1px rgba(255,255,255,.6),
+      0 2px 8px rgba(16,38,70,.28)}
+  .body::-webkit-scrollbar-thumb:hover{
+    background-image:linear-gradient(180deg,rgba(255,255,255,.96),rgba(80,162,255,.85))}
+  .body::-webkit-scrollbar-thumb:active{
+    background-image:linear-gradient(180deg,rgba(235,245,255,.96),rgba(10,132,255,.88))}
   .body.collapsed{display:none}
   #panel.min{width:auto}
   #panel.min .body{display:none}
@@ -843,14 +857,14 @@
     if(routeCoords.length<2){ setStatus('Noch keine Route zum Exportieren.','err'); return; }
     var x='<?xml version="1.0" encoding="UTF-8"?>\n';
     x+='<gpx version="1.1" creator="Waypoint" xmlns="http://www.topografix.com/GPX/1/1">\n';
-    x+='<metadata><name>Hannover - Berchtesgaden</name></metadata>\n';
+    x+='<metadata><name>Waypoint-Route</name></metadata>\n';
     waypoints.forEach(function(w,i){ x+='<wpt lat="'+w.lat.toFixed(6)+'" lon="'+w.lng.toFixed(6)+'"><name>WP'+(i+1)+'</name></wpt>\n'; });
     x+='<trk><name>Route</name><trkseg>\n';
     routeCoords.forEach(function(c){ x+='<trkpt lat="'+c[0].toFixed(6)+'" lon="'+c[1].toFixed(6)+'"></trkpt>\n'; });
     x+='</trkseg></trk>\n</gpx>\n';
     var blob=new Blob([x],{type:'application/gpx+xml'});
     var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download='route-hannover-berchtesgaden.gpx'; document.body.appendChild(a); a.click();
+    a.download='waypoint-route.gpx'; document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(a.href);
     setStatus('GPX exportiert — bereit für Garmin/Wahoo.');
   }
