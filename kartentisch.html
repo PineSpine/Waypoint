@@ -169,6 +169,17 @@
   #status{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:9px;min-height:15px;line-height:1.4}
   #status.busy{color:var(--accent-deep)} #status.err{color:var(--danger);font-weight:500}
 
+  /* Abschnitts-Profile (per-Abschnitt-Routing) */
+  .seg-list-h{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-soft);margin:6px 0 6px}
+  .seg-row{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 10px;margin-bottom:5px;
+    border:1px solid var(--edge);border-radius:11px;background:var(--glass-tile);font-size:12px;
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+  .seg-row .seg-prof{flex:1;text-align:center;color:var(--accent-deep);font-family:'DM Mono',monospace;font-size:11px}
+  .seg-x{border:1px solid var(--edge);background:rgba(255,255,255,.5);border-radius:8px;cursor:pointer;
+    font-size:11px;padding:2px 8px;color:var(--ink);font-family:'Onest';margin-left:6px}
+  .seg-x:hover{background:#fff;color:var(--danger)}
+
   /* drop zone */
   #drop{position:absolute;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;
     background:rgba(40,70,110,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
@@ -185,6 +196,9 @@
     box-shadow:0 3px 8px rgba(10,90,200,.5),inset 0 1px 0 rgba(255,255,255,.7);
     color:#fff;font-family:'DM Mono';font-weight:500;font-size:12px}
   .wp-pin span{transform:rotate(45deg)}
+  .wp-pin.leg{border-color:#c79bf2;box-shadow:0 0 0 2px rgba(150,90,225,.5),0 3px 8px rgba(10,90,200,.45),inset 0 1px 0 rgba(255,255,255,.7)}
+  .wp-pin.sel{background:linear-gradient(160deg,#ffc24d,#f59a18);border-color:#fff;
+    box-shadow:0 0 0 3px rgba(245,154,24,.55),0 3px 9px rgba(180,110,10,.5),inset 0 1px 0 rgba(255,255,255,.75)}
   .stage-flag{display:flex;align-items:center;justify-content:center;min-width:32px;height:23px;padding:0 6px;
     border-radius:8px;color:#0a3a66;font-family:'DM Mono';font-weight:500;font-size:11px;
     background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(225,240,255,.85));
@@ -310,6 +324,7 @@
           <p>Schlägt eine Engine fehl, schaltet die App sichtbar auf BRouter.de/Trekking zurück.</p>
         </div>
       </details>
+      <div id="segPanel" style="display:none;margin-top:8px"></div>
       <div style="height:8px"></div>
       <label class="fld" for="interval">Etappen-Marker setzen alle … km</label>
       <div class="btn-row" style="align-items:stretch">
@@ -364,6 +379,7 @@
     <button class="tb-btn" id="tDraw" title="Route zeichnen"><svg viewBox="0 0 24 24"><path d="M4 20l3.6-.9L18.5 8.2l-2.7-2.7L4.9 16.4z"/><path d="M14.5 6.5l3 3"/></svg></button>
     <button class="tb-btn" id="tInsert" title="Wegpunkt zwischen zwei bestehende einfügen"><svg viewBox="0 0 24 24"><path d="M3 19h18"/><circle cx="3" cy="19" r="1.6" fill="currentColor" stroke="none"/><circle cx="21" cy="19" r="1.6" fill="currentColor" stroke="none"/><path d="M12 4v9M7.5 8.5h9"/></svg></button>
     <button class="tb-btn" id="tReverse" title="Route umkehren"><svg viewBox="0 0 24 24"><path d="M7 8h11l-3.2-3.2M17 16H6l3.2 3.2"/></svg></button>
+    <button class="tb-btn" id="tSegSel" title="Abschnitts-Profil: Wegpunkte wählen (auch Strg+Klick), dann oben Profil setzen"><svg viewBox="0 0 24 24"><path d="M4 18c5 0 5-12 10-12s5 12 6 12"/><circle cx="4" cy="18" r="2.4" fill="currentColor" stroke="none"/><circle cx="14" cy="6" r="2.4" fill="currentColor" stroke="none"/></svg></button>
     <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
     <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
     <button class="tb-btn" id="tDelLast" title="Letzten Punkt löschen"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h7.5a4.5 4.5 0 0 1 4.5 4.5"/><path d="M18 11.3a2.7 2.7 0 0 0-2.7 2.7c0 2 2.7 4.6 2.7 4.6s2.7-2.6 2.7-4.6a2.7 2.7 0 0 0-2.7-2.7z"/><circle cx="18" cy="14" r="1.05"/></svg></button>
@@ -428,12 +444,13 @@
   }
   function gmaps(lat,lng){ return 'https://www.google.com/maps/search/?api=1&query='+lat.toFixed(6)+','+lng.toFixed(6); }
 
-  function wpIcon(i){
-    return L.divIcon({className:'',html:'<div class="wp-pin"><span>'+(i+1)+'</span></div>',
+  function wpIcon(i,w){
+    var cls='wp-pin'; if(w&&w.legProfile) cls+=' leg'; if(w&&w.sel) cls+=' sel';
+    return L.divIcon({className:'',html:'<div class="'+cls+'"><span>'+(i+1)+'</span></div>',
       iconSize:[26,26],iconAnchor:[13,26],popupAnchor:[0,-24]});
   }
   function reindexWaypoints(){
-    waypoints.forEach(function(w,i){ w.marker.setIcon(wpIcon(i)); });
+    waypoints.forEach(function(w,i){ w.marker.setIcon(wpIcon(i,w)); });
     document.getElementById('sWp').textContent = waypoints.length;
   }
 
@@ -445,6 +462,8 @@
     m.on('dragstart',function(){ snapshot(); });
     m.on('dragend',function(){ var p=m.getLatLng(); w.lat=p.lat; w.lng=p.lng; w.name=''; recompute(); });
     m.on('click',function(e){ L.DomEvent.stop(e);
+      var oe=e.originalEvent||{};
+      if(oe.ctrlKey || oe.metaKey || mode==='segsel'){ toggleSelect(w); return; }
       var idx=waypoints.indexOf(w);
       var ttl=w.name?w.name:('Wegpunkt '+(idx+1));
       var html='<b>'+ttl+'</b><br><span style="color:#5b5142">Wegpunkt '+(idx+1)+' · frei verschiebbar</span><br><button class="pop-add" id="delwp">Entfernen</button>';
@@ -459,13 +478,13 @@
 
   /* ---------------- Undo: Schnappschüsse der Wegpunktliste ---------------- */
   function snapshot(){
-    undoStack.push(waypoints.map(function(w){ return {lat:w.lat,lng:w.lng,name:w.name}; }));
+    undoStack.push(waypoints.map(function(w){ return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile}; }));
     if(undoStack.length>60) undoStack.shift();
   }
   function rebuildWaypoints(list){
     waypoints.forEach(function(w){ map.removeLayer(w.marker); }); waypoints=[];
-    list.forEach(function(p){ addWaypoint(p.lat,p.lng,true,p.name); });
-    reindexWaypoints(); recompute();
+    list.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; });
+    reindexWaypoints(); recompute(); updateSegPanel();
   }
   function undo(){
     if(!undoStack.length){ setStatus('Nichts mehr rückgängig zu machen.'); return; }
@@ -501,6 +520,71 @@
     var w=addWaypoint(lat,lng,false,name,idx);
     setStatus('Wegpunkt als Nr. '+(waypoints.indexOf(w)+1)+' in die Route eingefügt.');
     return w;
+  }
+
+  /* ---------------- Abschnitts-Profile (per-Abschnitt-Routing) ----------------
+     Override lebt am Start-Wegpunkt eines Teilstücks (w.legProfile = {engine,profile,label})
+     → robust gegen Einfügen/Löschen/Reihenfolge. Bei Routing wird die effektive Engine je
+     Bein bestimmt und gleiche aufeinanderfolgende Beine zu einem Lauf zusammengefasst. */
+  function selectionIndices(){ var a=[]; waypoints.forEach(function(w,i){ if(w.sel) a.push(i); }); return a; }
+  function toggleSelect(w){
+    w.sel=!w.sel; reindexWaypoints(); updateSegPanel();
+    var n=selectionIndices().length;
+    setStatus(n? (n+' Wegpunkt(e) gewählt — oben im Profil-Dropdown ein Profil für diesen Abschnitt setzen.')
+               : 'Auswahl leer.');
+  }
+  function clearSelection(){ waypoints.forEach(function(w){ w.sel=false; }); reindexWaypoints(); updateSegPanel(); }
+  function profileLabel(){
+    var s=document.getElementById('profile'); var o=s.options[s.selectedIndex];
+    var t=(o?o.text:s.value)||''; return t.split(' — ')[0].replace(/^[^0-9A-Za-zÄÖÜäöü„]+/,'').trim()||s.value;
+  }
+  function hasOverrides(){ return waypoints.some(function(w){ return !!w.legProfile; }); }
+  /* zusammenhängende Beine gleichen Overrides zu Abschnitten bündeln (für Anzeige/Entfernen) */
+  function overrideSections(){
+    var secs=[];
+    for(var k=0;k<waypoints.length-1;k++){
+      var lp=waypoints[k].legProfile; if(!lp) continue;
+      var last=secs[secs.length-1];
+      if(last && last.endLeg===k-1 && last.eng.engine===lp.engine && last.eng.profile===lp.profile){ last.endLeg=k; }
+      else secs.push({startLeg:k,endLeg:k,eng:lp});
+    }
+    return secs.map(function(s){ return {a:s.startLeg, b:s.endLeg+1, eng:s.eng}; });
+  }
+  function applyProfileToSelection(){
+    var sel=selectionIndices(); if(sel.length<2){ setStatus('Für ein Abschnitts-Profil mind. 2 Wegpunkte wählen.','err'); return false; }
+    var min=sel[0], max=sel[sel.length-1];
+    var eng=currentEngine(); eng.label=profileLabel();
+    snapshot();
+    for(var k=min;k<max;k++) waypoints[k].legProfile=eng;
+    clearSelection(); recompute();
+    setStatus('Abschnitt WP'+(min+1)+'–WP'+(max+1)+': Profil „'+eng.label+'" gesetzt — globales Profil unverändert.');
+    return true;
+  }
+  function clearSectionOverride(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].legProfile; recompute(); reindexWaypoints(); updateSegPanel(); }
+  function clearAllOverrides(){ if(!hasOverrides())return; snapshot(); waypoints.forEach(function(w){ delete w.legProfile; }); recompute(); reindexWaypoints(); updateSegPanel(); setStatus('Alle Abschnitts-Profile zurückgesetzt.'); }
+  function updateSegPanel(){
+    var el=document.getElementById('segPanel'); if(!el) return;
+    var sel=selectionIndices(), secs=overrideSections();
+    if(!sel.length && !secs.length){ el.style.display='none'; el.innerHTML=''; return; }
+    var html='';
+    if(sel.length){
+      html+= sel.length<2
+        ? '<div class="hint" style="margin:0 0 8px">Abschnitts-Profil: noch einen Wegpunkt wählen (mind. 2). <button class="seg-x" id="segClear">Auswahl aufheben</button></div>'
+        : '<div class="hint" style="margin:0 0 8px"><b>Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+' gewählt.</b> Wähle oben ein Profil — es gilt <b>nur</b> für diesen Abschnitt. <button class="seg-x" id="segClear">Auswahl aufheben</button></div>';
+    }
+    if(secs.length){
+      html+='<div class="seg-list-h">Abschnitts-Profile aktiv</div>';
+      secs.forEach(function(s,i){
+        html+='<div class="seg-row"><span>WP'+(s.a+1)+'–WP'+(s.b+1)+'</span><span class="seg-prof">'+s.eng.label+'</span><button class="seg-x" data-sec="'+i+'" title="Abschnitt auf globales Profil zurücksetzen">✕</button></div>';
+      });
+      html+='<button class="btn" id="segResetAll" style="margin-top:6px;justify-content:center">Alle Abschnitts-Profile zurücksetzen</button>';
+    }
+    el.innerHTML=html; el.style.display='';
+    var sc=document.getElementById('segClear'); if(sc) sc.onclick=clearSelection;
+    var ra=document.getElementById('segResetAll'); if(ra) ra.onclick=clearAllOverrides;
+    [].forEach.call(el.querySelectorAll('button[data-sec]'),function(b){
+      b.onclick=function(){ var s=overrideSections()[+b.getAttribute('data-sec')]; if(s) clearSectionOverride(s.a,s.b); };
+    });
   }
 
   /* ---------------- Routing (BRouter + fallback) ---------------- */
@@ -597,18 +681,23 @@
     if(!nogos.length) return '';
     return '&nogos='+nogos.map(function(n){return n.lng.toFixed(6)+','+n.lat.toFixed(6)+','+Math.round(n.radius);}).join('|');
   }
-  function fetchRoute(host,profile){
-    var ll=waypoints.map(function(w){return w.lng.toFixed(6)+','+w.lat.toFixed(6);}).join('|');
+  function fetchRoute(host,profile,wps){
+    wps=wps||waypoints;
+    var ll=wps.map(function(w){return w.lng.toFixed(6)+','+w.lat.toFixed(6);}).join('|');
     var url=host+'?lonlats='+ll+'&profile='+encodeURIComponent(profile)+nogoParam()+'&alternativeidx=0&format=geojson';
     return fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
   }
-  function applyGeo(geo){
+  function extractGeo(geo){
     var f=geo.features&&geo.features[0]; if(!f) throw new Error('keine Geometrie');
     var coords=f.geometry.coordinates.map(function(c){return [c[1],c[0],c.length>2?c[2]:undefined];});
     var p=f.properties||{};
-    routeDist=parseFloat(p['track-length']||0);
-    routeAsc=parseFloat(p['filtered ascend']||p['filtered_ascend']||0);
-    drawRoute(coords,false); updateStats();
+    return {coords:coords, dist:parseFloat(p['track-length']||0),
+      asc:parseFloat(p['filtered ascend']||p['filtered_ascend']||0)};
+  }
+  function applyGeo(geo){
+    var r=extractGeo(geo);
+    routeDist=r.dist; routeAsc=r.asc;
+    drawRoute(r.coords,false); updateStats();
   }
   function luftlinie(){
     var coords=waypoints.map(function(w){return [w.lat,w.lng];});
@@ -682,10 +771,91 @@
     doUpload();
   }
 
+  /* ---- Segmentiertes Routing (nur aktiv, wenn Abschnitts-Profile gesetzt sind) ---- */
+  function ghRoute(wps, profile, key){           // Promise<{coords,dist,asc}> ohne Zeichnen
+    var chunks=ghChunks(wps);
+    return new Promise(function(resolve,reject){
+      var all=[], dist=0, asc=0;
+      (function next(idx){
+        if(idx>=chunks.length){ resolve({coords:all,dist:dist,asc:asc}); return; }
+        var pts=chunks[idx].map(function(w){return 'point='+w.lat.toFixed(6)+','+w.lng.toFixed(6);}).join('&');
+        var url='https://graphhopper.com/api/1/route?'+pts+'&profile='+encodeURIComponent(profile)+
+                '&points_encoded=false&elevation=true&instructions=false&key='+encodeURIComponent(key);
+        fetch(url).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+          .then(function(res){
+            if(!res.ok||!res.d.paths||!res.d.paths[0]) throw new Error((res.d&&res.d.message)||'keine Route');
+            var p=res.d.paths[0];
+            var cs=p.points.coordinates.map(function(c){return [c[1],c[0],c.length>2?c[2]:undefined];});
+            if(idx>0&&cs.length) cs=cs.slice(1);
+            all=all.concat(cs); dist+=p.distance||0; asc+=p.ascend||0; next(idx+1);
+          }).catch(reject);
+      })(0);
+    });
+  }
+  function ensureUploadPid(token){               // Promise<custom-profile-id> (mit Cache)
+    if(ghProfileCache[token]) return Promise.resolve(ghProfileCache[token]);
+    var pText = profileTextCache[token] ? Promise.resolve(profileTextCache[token])
+      : fetch(RAW_URLS[token]).then(function(r){ if(!r.ok) throw new Error('Profil-Download '+r.status); return r.text(); })
+          .then(function(t){ profileTextCache[token]=t; return t; });
+    return pText.then(uploadProfile).then(function(pid){ ghProfileCache[token]=pid; return pid; });
+  }
+  function routeRun(wps, eng){                    // Promise<{coords,dist,asc}> für einen Lauf
+    if(eng.engine==='graphhopper'){
+      var key=((document.getElementById('ghKey').value)||'').trim();
+      if(!key) return Promise.reject(new Error('GraphHopper-Key fehlt'));
+      return ghRoute(wps, eng.profile, key);
+    }
+    if(eng.engine==='upload'){
+      return ensureUploadPid(eng.profile).then(function(pid){
+        return fetchRoute('https://brouter.de/brouter', pid, wps).then(extractGeo); });
+    }
+    return fetchRoute(hostFor(eng.engine), eng.profile, wps).then(extractGeo);
+  }
+  function buildRuns(globalEng){
+    var runs=[];
+    for(var k=0;k<waypoints.length-1;k++){
+      var eff=waypoints[k].legProfile || globalEng;
+      var last=runs[runs.length-1];
+      if(last && last.eng.engine===eff.engine && last.eng.profile===eff.profile){ last.b=k+1; }
+      else runs.push({a:k,b:k+1,eng:eff});
+    }
+    return runs;
+  }
+  function doSegmentedRoute(){
+    var globalEng=currentEngine();
+    var runs=buildRuns(globalEng);
+    setStatus('Route mit '+overrideSections().length+' Abschnitts-Profil(en) wird berechnet …','busy');
+    var results=new Array(runs.length), seq=Promise.resolve();
+    runs.forEach(function(run,ri){
+      seq=seq.then(function(){
+        var wps=waypoints.slice(run.a, run.b+1);
+        return routeRun(wps, run.eng).then(function(res){ results[ri]=res; })
+          .catch(function(){                       // sichtbarer Fallback: dieser Abschnitt als Luftlinie
+            var cs=wps.map(function(w){return [w.lat,w.lng,undefined];});
+            var d=0; for(var i=1;i<cs.length;i++) d+=haversine(cs[i-1],cs[i]);
+            results[ri]={coords:cs,dist:d,asc:0,fallback:true};
+          });
+      });
+    });
+    seq.then(function(){
+      var all=[], dist=0, asc=0, fb=0;
+      results.forEach(function(res,ri){
+        if(!res) return;
+        var cs=res.coords; if(ri>0 && cs.length) cs=cs.slice(1);
+        all=all.concat(cs); dist+=res.dist||0; asc+=res.asc||0; if(res.fallback) fb++;
+      });
+      routeDist=dist; routeAsc=asc; drawRoute(all,false); updateStats();
+      setStatus((fb?('⚠ '+fb+' Abschnitt(e) per Luftlinie überbrückt · '):'')+
+        overrideSections().length+' Sonderprofil(e) · '+runs.length+' Läufe · '+
+        (dist/1000).toFixed(1)+' km · '+Math.round(asc)+' Hm', fb?'err':'');
+    });
+  }
+
   function doRoute(){
     clearStages();
     if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0;updateStats();
       setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. Für Wegpunkte „Route zeichnen" in der Toolleiste aktivieren.'); return; }
+    if(hasOverrides()){ doSegmentedRoute(); return; }
     var eng=currentEngine();
     if(eng.engine==='graphhopper'){ routeGraphHopper(eng.profile); return; }
     if(eng.engine==='upload'){ routeUpload(eng.profile, RAW_URLS[eng.profile]); return; }
@@ -941,13 +1111,24 @@
     else if(mode==='poi') addPoi(e.latlng);
   });
 
+  var globalProfileValue=document.getElementById('profile').value;
+  function updateProfileAuxFields(){
+    var v=document.getElementById('profile').value;
+    document.getElementById('customProfile').style.display=(v==='__custom__')?'block':'none';
+    document.getElementById('ghKey').style.display=(v.indexOf('graphhopper|')===0)?'block':'none';
+  }
   document.getElementById('profile').onchange=function(){
-    var v=this.value;
-    var custom=v==='__custom__';
-    var gh=v.indexOf('graphhopper|')===0;
-    document.getElementById('customProfile').style.display=custom?'block':'none';
-    document.getElementById('ghKey').style.display=gh?'block':'none';
-    if(!custom) recompute();
+    updateProfileAuxFields();
+    // Bei aktiver Wegpunkt-Auswahl gilt die Profilwahl nur für den Abschnitt — global bleibt.
+    if(selectionIndices().length>=2){
+      applyProfileToSelection();
+      this.value=globalProfileValue;   // Dropdown wieder auf globales Profil zurückstellen
+      updateProfileAuxFields();
+      return;
+    }
+    if(this.value==='__custom__') return;   // erst nach Eingabe des Profilnamens routen
+    globalProfileValue=this.value;
+    recompute();
   };
   document.getElementById('customProfile').oninput=function(){ recompute(); };
   document.getElementById('ghKey').oninput=function(){ recompute(); };
@@ -970,17 +1151,17 @@
     document.getElementById('supBtn').classList.remove('active');
     if(radiusCircle){map.removeLayer(radiusCircle);radiusCircle=null;}
     clearRouteGeom(); clearStages(); routeDist=0;routeAsc=0;updateStats();
-    reindexWaypoints(); setStatus('Routendaten gelöscht.');
+    reindexWaypoints(); updateSegPanel(); setStatus('Routendaten gelöscht.');
   }
   function delLast(){ if(!waypoints.length)return; snapshot(); var w=waypoints.pop(); map.removeLayer(w.marker); reindexWaypoints(); recompute(); }
 
   /* ---- Toolbar buttons ---- */
   function setMode(m,btnId){
-    var toggles=['tDraw','tInsert','tNogo','tRadius','tPoi'];
+    var toggles=['tDraw','tInsert','tSegSel','tNogo','tRadius','tPoi'];
     if(mode===m){ mode='none'; } else { mode=m; }
     toggles.forEach(function(id){ document.getElementById(id).classList.toggle('active', document.getElementById(id)===document.getElementById(btnId) && mode===m); });
     map.getContainer().style.cursor = mode==='none' ? '' : 'crosshair';
-    var msg={draw:'Modus „Route zeichnen": Klick setzt Wegpunkte.',insert:'Modus „Wegpunkt einfügen": Klick fügt den Punkt in den nächstgelegenen Streckenabschnitt ein.',nogo:'Modus „No-Go-Gebiet": Klick setzt ein Sperrgebiet (Radius im Popup anpassbar).',radius:'Modus „Bewegungsradius": Klick setzt einen '+radiusKm+'-km-Kreis (ohne Gewähr).',poi:'Modus „POI": Klick setzt einen eigenen Punkt.',none:'Modus aus — Karte frei verschiebbar.'};
+    var msg={draw:'Modus „Route zeichnen": Klick setzt Wegpunkte.',insert:'Modus „Wegpunkt einfügen": Klick fügt den Punkt in den nächstgelegenen Streckenabschnitt ein.',segsel:'Modus „Abschnitts-Profil": Wegpunkte anklicken (auch Strg+Klick), dann oben ein Profil wählen.',nogo:'Modus „No-Go-Gebiet": Klick setzt ein Sperrgebiet (Radius im Popup anpassbar).',radius:'Modus „Bewegungsradius": Klick setzt einen '+radiusKm+'-km-Kreis (ohne Gewähr).',poi:'Modus „POI": Klick setzt einen eigenen Punkt.',none:'Modus aus — Karte frei verschiebbar.'};
     setStatus(msg[mode]||msg.none);
   }
   document.getElementById('tZoomIn').onclick=function(){ map.zoomIn(); };
@@ -1008,6 +1189,7 @@
   };
   document.getElementById('tDraw').onclick=function(){ setMode('draw','tDraw'); };
   document.getElementById('tInsert').onclick=function(){ setMode('insert','tInsert'); };
+  document.getElementById('tSegSel').onclick=function(){ setMode('segsel','tSegSel'); updateSegPanel(); };
   document.getElementById('tReverse').onclick=function(){
     if(waypoints.length<2)return; snapshot(); waypoints.reverse(); reindexWaypoints(); recompute(); setStatus('Route umgekehrt.'); };
   document.getElementById('tNogo').onclick=function(){ setMode('nogo','tNogo'); };

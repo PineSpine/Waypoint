@@ -27,6 +27,12 @@
 - Funktionen: Klick-Wegpunkte (ziehbar), debounctes Re-Routing, Etappen-Marker alle X km,
   Overpass-Loader (Camping/Supermarkt/Wasser/Radladen mit Google-Maps-Links),
   GPX-Import (Drag&Drop) + GPX-Export, Steigungscodierung, No-Go-Kreise, POIs, Bewegungsradius.
+- **Abschnitts-Profile (per-Abschnitt-Routing):** Override lebt am Start-Wegpunkt eines Teilstücks
+  (`w.legProfile`), nicht per Index → robust gegen Einfügen/Löschen/Undo. Auswahl via Toolbar-Modus
+  „Abschnitts-Profil" *oder* Strg+Klick auf Marker; bei aktiver Auswahl (≥2 Punkte) gilt das
+  Profil-Dropdown nur für den Abschnitt, global bleibt. Routing zerlegt die Route in Läufe gleicher
+  effektiver Engine (`buildRuns`/`doSegmentedRoute`), routet jeden Lauf einzeln und näht die
+  Geometrie zusammen (doppelter Nahtpunkt verworfen). Nur aktiv, wenn `hasOverrides()`.
 
 ## Routing-Engines (hart erarbeitetes Wissen — bitte beachten)
 - **① BRouter.de (Primär, verifiziert):** GET `https://brouter.de/brouter`, **CORS offen**.
@@ -51,8 +57,8 @@
 ## Konventionen / Vorlieben
 - **Toolleisten-Funktionsreihenfolge NICHT ändern** — nur Styling. Aktuelle Reihenfolge:
   Zoom In · Zoom Out · Standort · Suche · Route zeichnen · Wegpunkt einfügen · Route umkehren ·
-  No-Go-Kreis · Bewegungsradius (ohne Gewähr) · letzten Punkt löschen · Routendaten löschen ·
-  POI · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  Abschnitts-Profil · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · letzten Punkt löschen ·
+  Routendaten löschen · POI · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
 - Hauptpanel und Toolleiste: beide **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
 - Funktionalität bei Restyles erhalten.
