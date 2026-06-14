@@ -325,6 +325,26 @@
           <p>Schlägt eine Engine fehl, schaltet die App sichtbar auf BRouter.de/Trekking zurück.</p>
         </div>
       </details>
+      <details class="hint-acc" style="margin-top:7px">
+        <summary>Feinabstimmung — Profil tunen (BRouter Trekking/Schnell)</summary>
+        <div style="margin-top:6px">
+          <div class="tog"><span>🌳 Grün / Wald bevorzugen</span>
+            <label class="sw"><input type="checkbox" id="tuneForest"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🤫 Ruhige, leise Wege</span>
+            <label class="sw"><input type="checkbox" id="tuneNoise"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🛣️ Hauptstraßen meiden</span>
+            <label class="sw"><input type="checkbox" id="tuneAvoid"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🚲 Ausgeschilderten Radrouten folgen</span>
+            <label class="sw"><input type="checkbox" id="tuneCycle"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🏞️ Entlang Flüssen / Seen</span>
+            <label class="sw"><input type="checkbox" id="tuneRiver"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🏙️ Städte / große Orte umfahren</span>
+            <label class="sw"><input type="checkbox" id="tuneTown"><span class="tr"></span><span class="kn"></span></label></div>
+          <label class="fld" style="margin-top:9px">⛰️ Steigungen meiden: <b id="tuneUphillVal">0</b> / 10</label>
+          <input type="range" id="tuneUphill" min="0" max="10" value="0" step="1" style="width:100%;accent-color:var(--accent)" />
+          <div class="hint" style="margin-top:7px">Feintuning des BRouter-Trekking/Schnell-Profils (per Profil-Parameter, ohne Upload/Key). Gilt nicht für GraphHopper. Für <b>unbefestigte Wege</b>: oben die Engine „Gravel" wählen.</div>
+        </div>
+      </details>
       <div id="segPanel" style="display:none;margin-top:8px"></div>
       <div style="height:8px"></div>
       <label class="fld" for="interval">Etappen-Marker setzen alle … km</label>
@@ -337,6 +357,19 @@
     <div class="sec" id="stageBreakdownSec" style="display:none">
       <div class="sec-h">Etappen-Höhenprofil</div>
       <div id="stageBreakdown"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">Rundweg (experimentell)</div>
+      <label class="fld" for="rtDist">Wunsch-Distanz (km)</label>
+      <div class="btn-row" style="align-items:stretch">
+        <input type="number" id="rtDist" value="40" min="5" max="200" step="5" style="width:90px" />
+        <button class="btn" id="rtGo" style="margin:0;flex:1"><span class="ic">🔄</span>Rundweg generieren</button>
+      </div>
+      <label class="fld" style="margin-top:8px">Rundheit: <b id="rtPtsVal">5</b> Stützpunkte</label>
+      <input type="range" id="rtPts" min="3" max="8" value="5" step="1" style="width:100%;accent-color:var(--accent)" />
+      <button class="btn" id="rtVary" style="margin-top:8px"><span class="ic">🎲</span>Andere Variante (Richtung)</button>
+      <div class="hint">Erzeugt eine Schleife ab der <b>Kartenmitte</b> mit ungefährer Wunsch-Distanz und kehrt zum Start zurück. Heuristisch — die echte Länge weicht ab; „Andere Variante" probiert eine neue Richtung. <b>Ersetzt</b> die aktuelle Route (rückgängig per Undo).</div>
     </div>
 
     <div class="sec">
@@ -430,12 +463,16 @@
   var campMarkers=[], supplyMarkers=[];   // getrennt verwaltet, damit jede Kategorie einzeln ein-/ausblendbar ist
   var undoStack=[];                        // Schnappschüsse der Wegpunktliste für „rückgängig"
   var routeDist=0, routeAsc=0;
+  var routeSeq=0;                  // „neueste Anfrage gewinnt": stale async-Ergebnisse verwerfen
   var mode='none';                 // draw | nogo | radius | poi | none — Start: Karte frei beweglich
   var nogos=[];                    // {lat,lng,radius,circle}
   var pois=[];                     // {lat,lng,name,marker}
   var radiusCircle=null, radiusKm=15;
   var routeOpacity=1, gradientMode=false, gradientLayer=null;
   var ghProfileCache={};
+  // Feinabstimmung des BRouter-Trekking/Schnell-Profils (per &profile:<name>= an die Anfrage)
+  var tune={forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0};
+  var rtSeed=0;                    // Rundweg-Richtungs-Seed
 
   var statusEl=document.getElementById('status');
   function setStatus(t,cls){ statusEl.textContent=t; statusEl.className=cls||''; }
@@ -531,6 +568,32 @@
     var w=addWaypoint(lat,lng,false,name,idx);
     setStatus('Wegpunkt als Nr. '+(waypoints.indexOf(w)+1)+' in die Route eingefügt.');
     return w;
+  }
+
+  /* ---------------- Rundweg (heuristische Schleife, key-frei über BRouter) ---------------- */
+  function destPoint(lat,lng,brgDeg,distM){
+    var R=6371000, d=distM/R, b=brgDeg*Math.PI/180, la1=lat*Math.PI/180, lo1=lng*Math.PI/180;
+    var la2=Math.asin(Math.sin(la1)*Math.cos(d)+Math.cos(la1)*Math.sin(d)*Math.cos(b));
+    var lo2=lo1+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la1), Math.cos(d)-Math.sin(la1)*Math.sin(la2));
+    return [la2*180/Math.PI, lo2*180/Math.PI];
+  }
+  function generateRoundtrip(skipConfirm){
+    var T=parseFloat(document.getElementById('rtDist').value)*1000;
+    var N=parseInt(document.getElementById('rtPts').value,10)||5;
+    if(!T||T<3000){ setStatus('Bitte eine Wunsch-Distanz ≥ 5 km angeben.','err'); return; }
+    if(!skipConfirm && waypoints.length && !confirm('Aktuelle Route durch einen generierten Rundweg ersetzen?\n(Per Undo wiederherstellbar.)')) return;
+    var c=map.getCenter();
+    var detour=1.55;                                   // Straßen/Wege sind deutlich länger als die Luftlinie
+    var r=(T/detour)/(2*N*Math.sin(Math.PI/N));        // Kreisradius so, dass das N-Eck ~ Zieldistanz hat
+    var b0=(rtSeed*47)%360;                            // Seed → Startrichtung
+    snapshot();
+    waypoints.forEach(function(w){map.removeLayer(w.marker);}); waypoints=[];
+    addWaypoint(c.lat,c.lng,true,'Rundweg-Start');
+    for(var i=0;i<N;i++){ var p=destPoint(c.lat,c.lng,b0+i*360/N,r); addWaypoint(p[0],p[1],true,'Rundweg '+(i+1)); }
+    addWaypoint(c.lat,c.lng,true,'Rundweg-Ziel');
+    reindexWaypoints(); updateSegPanel();
+    setStatus('Rundweg wird berechnet (Ziel ≈ '+(T/1000).toFixed(0)+' km · '+N+' Punkte · Variante '+(rtSeed+1)+') — echte Länge siehe Statistik.','busy');
+    recompute();
   }
 
   /* ---------------- Abschnitts-Profile (per-Abschnitt-Routing) ----------------
@@ -744,10 +807,23 @@
     if(!nogos.length) return '';
     return '&nogos='+nogos.map(function(n){return n.lng.toFixed(6)+','+n.lat.toFixed(6)+','+Math.round(n.radius);}).join('|');
   }
+  /* Feinabstimmung als BRouter-Profil-Parameter (nur Standard-Trekking/Schnell unterstützen sie) */
+  function tuneParam(profile){
+    if(profile!=='trekking' && profile!=='fastbike') return '';
+    var p='';
+    if(tune.forest) p+='&profile:consider_forest=1';
+    if(tune.noise)  p+='&profile:consider_noise=1';
+    if(tune.avoid)  p+='&profile:avoid_unsafe=1';
+    if(tune.cycle)  p+='&profile:stick_to_cycleroutes=1';
+    if(tune.river)  p+='&profile:consider_river=1';
+    if(tune.town)   p+='&profile:consider_town=1';
+    if(tune.uphill>0) p+='&profile:uphillcost='+(tune.uphill*10);   // Regler 0..10 → uphillcost 0..100
+    return p;
+  }
   function fetchRoute(host,profile,wps){
     wps=wps||waypoints;
     var ll=wps.map(function(w){return w.lng.toFixed(6)+','+w.lat.toFixed(6);}).join('|');
-    var url=host+'?lonlats='+ll+'&profile='+encodeURIComponent(profile)+nogoParam()+'&alternativeidx=0&format=geojson';
+    var url=host+'?lonlats='+ll+'&profile='+encodeURIComponent(profile)+nogoParam()+tuneParam(profile)+'&alternativeidx=0&format=geojson';
     return fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
   }
   function extractGeo(geo){
@@ -888,7 +964,7 @@
     }
     return runs;
   }
-  function doSegmentedRoute(){
+  function doSegmentedRoute(myId){
     var globalEng=currentEngine();
     var runs=buildRuns(globalEng);
     setStatus('Route wird berechnet ('+overrideSections().length+' Sonderprofil(e), '+lockSections().length+' gesperrt) …','busy');
@@ -906,6 +982,7 @@
       });
     });
     seq.then(function(){
+      if(myId!==routeSeq) return;                    // veraltete Anfrage — verwerfen
       var all=[], dist=0, asc=0, fb=0;
       results.forEach(function(res,ri){
         if(!res) return;
@@ -923,7 +1000,8 @@
     clearStages();
     if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0;updateStats();
       setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. Für Wegpunkte „Route zeichnen" in der Toolleiste aktivieren.'); return; }
-    if(hasOverrides()||hasLocks()){ doSegmentedRoute(); return; }
+    var myId=++routeSeq;                              // diese Anfrage markieren
+    if(hasOverrides()||hasLocks()){ doSegmentedRoute(myId); return; }
     var eng=currentEngine();
     if(eng.engine==='graphhopper'){ routeGraphHopper(eng.profile); return; }
     if(eng.engine==='upload'){ routeUpload(eng.profile, RAW_URLS[eng.profile]); return; }
@@ -931,9 +1009,9 @@
     var label=(eng.engine==='bikerouter'?'bikerouter.de':'BRouter.de')+' · '+eng.profile;
     setStatus('Route wird berechnet … ('+label+')','busy');
     fetchRoute(host,eng.profile)
-      .then(function(geo){ applyGeo(geo);
+      .then(function(geo){ if(myId!==routeSeq) return; applyGeo(geo);
         setStatus(label+' · '+(routeDist/1000).toFixed(1)+' km · '+Math.round(routeAsc)+' Hm'); })
-      .catch(function(){
+      .catch(function(){ if(myId!==routeSeq) return;
         if(eng.engine==='bikerouter'){ return trekkingFallback('⚠ bikerouter.de ('+eng.profile+') nicht erreichbar (CORS)'); }
         luftlinie();
       });
@@ -1188,6 +1266,7 @@
         ghKey:document.getElementById('ghKey').value,
         interval:document.getElementById('interval').value,
         gradientMode:gradientMode,
+        tune:tune,
         lyrCycle:document.getElementById('lyrCycle').checked,
         lyrTopo:document.getElementById('lyrTopo').checked,
         view:{c:[ctr.lat,ctr.lng], z:map.getZoom()},
@@ -1215,6 +1294,7 @@
     if(d.lyrCycle){ document.getElementById('lyrCycle').checked=true; map.addLayer(cycle); }
     if(d.lyrTopo){ document.getElementById('lyrTopo').checked=true; map.removeLayer(osm); map.addLayer(topo); }
     gradientMode=!!d.gradientMode; document.getElementById('tGradient').classList.toggle('active',gradientMode);
+    if(d.tune){ tune=d.tune; if(typeof syncTuneUI==='function') syncTuneUI(); }
     reindexWaypoints(); updateSegPanel();
     if(d.view && d.view.c){ map.setView(d.view.c, d.view.z); }
     else map.fitBounds(L.latLngBounds(waypoints.map(function(w){return [w.lat,w.lng];})),{padding:[55,55]});
@@ -1229,6 +1309,7 @@
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     clearAll();
     var sel=document.getElementById('profile'); sel.value='brouter|trekking'; globalProfileValue=sel.value; updateProfileAuxFields();
+    tune={forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0}; syncTuneUI();
     if(gradientMode){ gradientMode=false; document.getElementById('tGradient').classList.remove('active'); }
     if(document.getElementById('lyrTopo').checked){ document.getElementById('lyrTopo').checked=false; map.removeLayer(topo); map.addLayer(osm); }
     if(map.hasLayer(cycle)) map.removeLayer(cycle);
@@ -1267,6 +1348,23 @@
   };
   document.getElementById('customProfile').oninput=function(){ recompute(); };
   document.getElementById('ghKey').oninput=function(){ recompute(); };
+
+  /* ---- Feinabstimmung (Profil-Parameter) ---- */
+  var tuneMap={tuneForest:'forest',tuneNoise:'noise',tuneAvoid:'avoid',tuneCycle:'cycle',tuneRiver:'river',tuneTown:'town'};
+  function syncTuneUI(){
+    Object.keys(tuneMap).forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=!!tune[tuneMap[id]]; });
+    var u=document.getElementById('tuneUphill'); if(u){ u.value=tune.uphill||0; document.getElementById('tuneUphillVal').textContent=tune.uphill||0; }
+  }
+  Object.keys(tuneMap).forEach(function(id){
+    document.getElementById(id).onchange=function(){ tune[tuneMap[id]]=this.checked; recompute(); };
+  });
+  document.getElementById('tuneUphill').oninput=function(){ tune.uphill=parseInt(this.value,10)||0; document.getElementById('tuneUphillVal').textContent=tune.uphill; recompute(); };
+
+  /* ---- Rundweg ---- */
+  document.getElementById('rtPts').oninput=function(){ document.getElementById('rtPtsVal').textContent=this.value; };
+  document.getElementById('rtGo').onclick=function(){ rtSeed=0; generateRoundtrip(false); };
+  document.getElementById('rtVary').onclick=function(){ rtSeed++; generateRoundtrip(true); };
+
   document.getElementById('stageBtn').onclick=toggleStages;
   document.getElementById('campBtn').onclick=loadCamping;
   document.getElementById('supBtn').onclick=loadSupply;

@@ -31,6 +31,16 @@
 - Funktionen: Klick-Wegpunkte (ziehbar), debounctes Re-Routing, Etappen-Marker alle X km,
   Overpass-Loader (Camping/Supermarkt/Wasser/Radladen mit Google-Maps-Links),
   GPX-Import (Drag&Drop) + GPX-Export, Steigungscodierung, No-Go-Kreise, POIs, Bewegungsradius.
+- **Profil-Feinabstimmung (`tune`):** BRouter akzeptiert Profil-Parameter direkt in der URL
+  (`&profile:<name>=<wert>`, von brouter.de unterstützt, ohne Upload/Key). `tuneParam()` hängt sie
+  nur an Standard-`trekking`/`fastbike` an. Schalter: `consider_forest` (Grün/Wald),
+  `consider_noise` (ruhig/leise), `avoid_unsafe`, `stick_to_cycleroutes`, `consider_river`,
+  `consider_town`; Regler „Steigungen meiden" → `uphillcost` (0..100). „Unbefestigt" = Gravel-Engine.
+- **Rundweg (`generateRoundtrip`, experimentell):** key-frei. N Punkte auf einem Kreis um die
+  Kartenmitte (Radius aus Wunsch-Distanz / Detour-Faktor 1,55), per BRouter durchrouten, zurück zum
+  Start. „Andere Variante" erhöht `rtSeed` (Startrichtung). Ersetzt die Route (Undo möglich).
+- **„Neueste Anfrage gewinnt" (`routeSeq`):** doRoute markiert jede Anfrage; veraltete async-Ergebnisse
+  (brouter-Einzelpfad + `doSegmentedRoute`) werden verworfen, statt neuere zu überschreiben.
 - **Abschnitts-Profile (per-Abschnitt-Routing):** Override lebt am Start-Wegpunkt eines Teilstücks
   (`w.legProfile`), nicht per Index → robust gegen Einfügen/Löschen/Undo. Auswahl via Toolbar-Modus
   „Abschnitts-Profil" *oder* Strg+Klick auf Marker; bei aktiver Auswahl (≥2 Punkte) gilt das
