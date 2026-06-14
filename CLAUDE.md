@@ -19,8 +19,12 @@
 ## Die App
 - **Eine einzige, selbst-enthaltene HTML-Datei:** `kartentisch.html`. Kein Build-Step.
 - **Stack:** Leaflet 1.9.4 (nur via cdnjs), OSM-Basiskarte + OpenTopoMap-Umschalter,
-  Waymarked-Trails-Radnetz-Overlay (default an). Fonts: Onest + DM Mono (Google Fonts).
-- **Kein `localStorage`** — der gesamte State liegt im Speicher (in-memory).
+  Waymarked-Trails-Radnetz-Overlay (default aus). Fonts: Onest + DM Mono (Google Fonts).
+- **Persistenz via `localStorage`** (Key `waypoint_route_v1`): expliziter Speichern-Button
+  (`saveState`) sichert Wegpunkte inkl. `legProfile`, globales Profil, Nogos, POIs, Ebenen,
+  Steigungsmodus und Kartenausschnitt; beim Start lädt `loadState()` diesen Stand bevorzugt,
+  sonst das PRESET. (Früher galt „kein localStorage" — bewusst aufgehoben für den Save-Button.)
+  Bei `file://` kann der Browser localStorage sperren → sichtbarer Fehlerstatus.
 - **Stil: „Liquid Glass"** — frostige, transluzente Panels, `backdrop-filter` blur+saturate,
   Blau/Weiß-Palette. Akzent `#0a84ff` / `#0060df`, Routenlinie `#1f6fff`.
 - **19-Wegpunkte-Preset** des Gesamtkorridors ist im JS am Dateiende eingebettet (`PRESET`).
@@ -58,7 +62,8 @@
 - **Toolleisten-Funktionsreihenfolge NICHT ändern** — nur Styling. Aktuelle Reihenfolge:
   Zoom In · Zoom Out · Standort · Suche · Route zeichnen · Wegpunkt einfügen · Route umkehren ·
   Abschnitts-Profil · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · letzten Punkt löschen ·
-  Routendaten löschen · POI · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  Routendaten speichern · Routendaten löschen · POI · Steigungscodierung ·
+  letzte Aktion rückgängig · Transparenz-Slider.
 - Hauptpanel und Toolleiste: beide **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
 - Funktionalität bei Restyles erhalten.

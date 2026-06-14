@@ -196,7 +196,7 @@
     box-shadow:0 3px 8px rgba(10,90,200,.5),inset 0 1px 0 rgba(255,255,255,.7);
     color:#fff;font-family:'DM Mono';font-weight:500;font-size:12px}
   .wp-pin span{transform:rotate(45deg)}
-  .wp-pin.leg{border-color:#c79bf2;box-shadow:0 0 0 2px rgba(150,90,225,.5),0 3px 8px rgba(10,90,200,.45),inset 0 1px 0 rgba(255,255,255,.7)}
+  .wp-pin.leg{border-color:#eaff00;box-shadow:0 0 0 2.5px rgba(234,255,0,.95),0 0 9px rgba(234,255,0,.85),0 3px 8px rgba(10,90,200,.4),inset 0 1px 0 rgba(255,255,255,.7)}
   .wp-pin.sel{background:linear-gradient(160deg,#ffc24d,#f59a18);border-color:#fff;
     box-shadow:0 0 0 3px rgba(245,154,24,.55),0 3px 9px rgba(180,110,10,.5),inset 0 1px 0 rgba(255,255,255,.75)}
   .stage-flag{display:flex;align-items:center;justify-content:center;min-width:32px;height:23px;padding:0 6px;
@@ -383,6 +383,7 @@
     <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
     <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
     <button class="tb-btn" id="tDelLast" title="Letzten Punkt löschen"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h7.5a4.5 4.5 0 0 1 4.5 4.5"/><path d="M18 11.3a2.7 2.7 0 0 0-2.7 2.7c0 2 2.7 4.6 2.7 4.6s2.7-2.6 2.7-4.6a2.7 2.7 0 0 0-2.7-2.7z"/><circle cx="18" cy="14" r="1.05"/></svg></button>
+    <button class="tb-btn" id="tSave" title="Routendaten speichern (wird beim nächsten Öffnen geladen)"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 13h8v6H8z"/></svg></button>
     <button class="tb-btn" id="tClear" title="Routendaten löschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg></button>
     <button class="tb-btn" id="tPoi" title="POI einzeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
     <button class="tb-btn" id="tGradient" title="Steigungscodierung"><svg viewBox="0 0 24 24"><path d="M3 19l6-9 4 5 3-4 5 8z"/></svg></button>
@@ -444,13 +445,19 @@
   }
   function gmaps(lat,lng){ return 'https://www.google.com/maps/search/?api=1&query='+lat.toFixed(6)+','+lng.toFixed(6); }
 
-  function wpIcon(i,w){
-    var cls='wp-pin'; if(w&&w.legProfile) cls+=' leg'; if(w&&w.sel) cls+=' sel';
+  function wpIcon(i,w,isLeg){
+    var cls='wp-pin'; if(isLeg) cls+=' leg'; if(w&&w.sel) cls+=' sel';
     return L.divIcon({className:'',html:'<div class="'+cls+'"><span>'+(i+1)+'</span></div>',
       iconSize:[26,26],iconAnchor:[13,26],popupAnchor:[0,-24]});
   }
   function reindexWaypoints(){
-    waypoints.forEach(function(w,i){ w.marker.setIcon(wpIcon(i,w)); });
+    waypoints.forEach(function(w,i){
+      // Ein Wegpunkt gehört zu einem Abschnitts-Profil, wenn er ein überschriebenes Bein
+      // STARTET (w.legProfile) ODER es BEENDET (Vorgänger hat legProfile) → so wird auch
+      // der letzte Wegpunkt des Abschnitts markiert.
+      var isLeg = !!w.legProfile || (i>0 && !!waypoints[i-1].legProfile);
+      w.marker.setIcon(wpIcon(i,w,isLeg));
+    });
     document.getElementById('sWp').textContent = waypoints.length;
   }
 
@@ -1063,10 +1070,11 @@
   }
 
   /* ---------------- Tool modes: nogo / radius / poi ---------------- */
-  function addNogo(latlng){
-    var c=L.circle(latlng,{radius:1000,color:'#c62828',weight:2,fillColor:'#c62828',fillOpacity:.15}).addTo(map);
+  function addNogo(latlng, radius){
+    var rad=radius||1000;
+    var c=L.circle(latlng,{radius:rad,color:'#c62828',weight:2,fillColor:'#c62828',fillOpacity:.15}).addTo(map);
     var center=L.marker(latlng,{draggable:true,icon:L.divIcon({className:'',html:'<div class="nogo-pin">⊘</div>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map);
-    var n={lat:latlng.lat,lng:latlng.lng,radius:1000,circle:c,center:center};
+    var n={lat:latlng.lat,lng:latlng.lng,radius:rad,circle:c,center:center};
     nogos.push(n);
     center.on('drag',function(){ var p=center.getLatLng(); n.lat=p.lat;n.lng=p.lng; c.setLatLng(p); });
     center.on('dragend',recompute);
@@ -1089,17 +1097,69 @@
     radiusCircle.bindPopup('<b>Bewegungsradius</b><br>'+radiusKm+' km um diesen Punkt<br><span style="color:#5a6e82">ohne Gewähr</span>').openPopup();
     setStatus('Bewegungsradius: '+radiusKm+' km um den gewählten Punkt (ohne Gewähr).');
   }
-  function addPoi(latlng){
-    var name=prompt('Name des POI (optional):','POI '+(pois.length+1))||('POI '+(pois.length+1));
-    var m=L.marker(latlng,{draggable:true,icon:L.divIcon({className:'',html:'<div class="poi-pin"><span>★</span></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-22]})}).addTo(map);
-    var p={lat:latlng.lat,lng:latlng.lng,name:name,marker:m}; pois.push(p);
+  function createPoi(lat,lng,name){
+    var m=L.marker([lat,lng],{draggable:true,icon:L.divIcon({className:'',html:'<div class="poi-pin"><span>★</span></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-22]})}).addTo(map);
+    var p={lat:lat,lng:lng,name:name,marker:m}; pois.push(p);
     m.on('dragend',function(){var ll=m.getLatLng();p.lat=ll.lat;p.lng=ll.lng;});
     m.on('click',function(e){ L.DomEvent.stop(e);
-      m.bindPopup('<b>'+name+'</b><br><button class="pop-add" id="poidel" style="background:#7a4ad0;border-color:#7a4ad0">Entfernen</button>').openPopup();
+      m.bindPopup('<b>'+p.name+'</b><br><button class="pop-add" id="poidel" style="background:#7a4ad0;border-color:#7a4ad0">Entfernen</button>').openPopup();
       setTimeout(function(){var d=document.getElementById('poidel');if(d)d.onclick=function(){map.removeLayer(m);pois.splice(pois.indexOf(p),1);};},30);
     });
     poiMarkers.push(m);
+    return p;
+  }
+  function addPoi(latlng){
+    var name=prompt('Name des POI (optional):','POI '+(pois.length+1))||('POI '+(pois.length+1));
+    createPoi(latlng.lat,latlng.lng,name);
     setStatus('POI „'+name+'" gesetzt — wird im GPX-Export als Wegpunkt mitgegeben.');
+  }
+
+  /* ---------------- Persistenz (localStorage) ----------------
+     Bewusster Bruch mit „kein localStorage": expliziter Speichern-Button + Auto-Laden
+     des letzten Stands beim Öffnen. */
+  var STORE_KEY='waypoint_route_v1';
+  function saveState(){
+    try{
+      var ctr=map.getCenter();
+      var data={ v:1,
+        profile:document.getElementById('profile').value,
+        customProfile:document.getElementById('customProfile').value,
+        ghKey:document.getElementById('ghKey').value,
+        interval:document.getElementById('interval').value,
+        gradientMode:gradientMode,
+        lyrCycle:document.getElementById('lyrCycle').checked,
+        lyrTopo:document.getElementById('lyrTopo').checked,
+        view:{c:[ctr.lat,ctr.lng], z:map.getZoom()},
+        waypoints:waypoints.map(function(w){return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile};}),
+        nogos:nogos.map(function(n){return {lat:n.lat,lng:n.lng,radius:n.radius};}),
+        pois:pois.map(function(p){return {lat:p.lat,lng:p.lng,name:p.name};})
+      };
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      setStatus('Routendaten gespeichert ('+waypoints.length+' WP) — werden beim nächsten Öffnen automatisch geladen.');
+    }catch(e){ setStatus('Speichern fehlgeschlagen ('+(e.message||e)+'). Bei file:// kann der Browser localStorage sperren.','err'); }
+  }
+  function loadState(){
+    var raw; try{ raw=localStorage.getItem(STORE_KEY); }catch(e){ return false; }
+    if(!raw) return false;
+    var d; try{ d=JSON.parse(raw); }catch(e){ return false; }
+    if(!d || !d.waypoints || !d.waypoints.length) return false;
+    if(d.profile){ var sel=document.getElementById('profile'); sel.value=d.profile; globalProfileValue=sel.value; }
+    if(d.customProfile!=null) document.getElementById('customProfile').value=d.customProfile;
+    if(d.ghKey!=null) document.getElementById('ghKey').value=d.ghKey;
+    if(typeof updateProfileAuxFields==='function') updateProfileAuxFields();
+    if(d.interval!=null) document.getElementById('interval').value=d.interval;
+    d.waypoints.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; });
+    if(d.nogos) d.nogos.forEach(function(n){ addNogo(L.latLng(n.lat,n.lng), n.radius); });
+    if(d.pois) d.pois.forEach(function(p){ createPoi(p.lat,p.lng,p.name); });
+    if(d.lyrCycle){ document.getElementById('lyrCycle').checked=true; map.addLayer(cycle); }
+    if(d.lyrTopo){ document.getElementById('lyrTopo').checked=true; map.removeLayer(osm); map.addLayer(topo); }
+    gradientMode=!!d.gradientMode; document.getElementById('tGradient').classList.toggle('active',gradientMode);
+    reindexWaypoints(); updateSegPanel();
+    if(d.view && d.view.c){ map.setView(d.view.c, d.view.z); }
+    else map.fitBounds(L.latLngBounds(waypoints.map(function(w){return [w.lat,w.lng];})),{padding:[55,55]});
+    recompute();
+    setStatus('Letzter gespeicherter Stand geladen ('+waypoints.length+' Wegpunkte).');
+    return true;
   }
 
   /* ---------------- Wire up UI ---------------- */
@@ -1196,6 +1256,7 @@
   document.getElementById('tRadius').onclick=function(){ setMode('radius','tRadius'); };
   document.getElementById('tDelLast').onclick=delLast;
   document.getElementById('tUndo').onclick=undo;
+  document.getElementById('tSave').onclick=saveState;
   document.getElementById('tClear').onclick=clearAll;
   document.getElementById('tPoi').onclick=function(){ setMode('poi','tPoi'); };
   document.getElementById('tGradient').onclick=function(){
@@ -1280,11 +1341,14 @@
     {name:'Bad Reichenhall — Saalachtal/Salzhandelsweg',  lat:47.7290, lng:12.8780},
     {name:'Berchtesgaden · Ziel',                         lat:47.6303, lng:12.9968}
   ];
-  PRESET.forEach(function(p){ addWaypoint(p.lat,p.lng,true,p.name); });
-  document.getElementById('lyrCycle').checked=false;   // Fernradwege-Overlay standardmäßig aus
-  map.fitBounds(L.latLngBounds(PRESET.map(function(p){return [p.lat,p.lng];})),{padding:[55,55]});
-  recompute();
-  setStatus('Entwurf v2 geladen · 19 Stützpunkte auf den Fernradwegen. Fernradwege-Overlay über „Ebenen" zuschaltbar.');
+  // Gespeicherten Stand bevorzugt laden; sonst den 19-Wegpunkte-Entwurf als Start.
+  if(!loadState()){
+    PRESET.forEach(function(p){ addWaypoint(p.lat,p.lng,true,p.name); });
+    document.getElementById('lyrCycle').checked=false;   // Fernradwege-Overlay standardmäßig aus
+    map.fitBounds(L.latLngBounds(PRESET.map(function(p){return [p.lat,p.lng];})),{padding:[55,55]});
+    recompute();
+    setStatus('Entwurf v2 geladen · 19 Stützpunkte auf den Fernradwegen. Fernradwege-Overlay über „Ebenen" zuschaltbar.');
+  }
 
 })();
 </script>
