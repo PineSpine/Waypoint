@@ -197,6 +197,7 @@
     color:#fff;font-family:'DM Mono';font-weight:500;font-size:12px}
   .wp-pin span{transform:rotate(45deg)}
   .wp-pin.leg{border-color:#eaf7ff;box-shadow:0 0 0 3px rgba(224,244,255,.97),0 0 12px rgba(198,232,255,.95),0 3px 8px rgba(10,90,200,.35),inset 0 1px 0 rgba(255,255,255,.95)}
+  .wp-pin.lock{border-color:#37e0b0;box-shadow:0 0 0 3px rgba(40,210,160,.92),0 0 11px rgba(40,210,160,.8),0 3px 8px rgba(10,90,200,.35),inset 0 1px 0 rgba(255,255,255,.8)}
   .wp-pin.sel{background:linear-gradient(160deg,#ffc24d,#f59a18);border-color:#fff;
     box-shadow:0 0 0 3px rgba(245,154,24,.55),0 3px 9px rgba(180,110,10,.5),inset 0 1px 0 rgba(255,255,255,.75)}
   .stage-flag{display:flex;align-items:center;justify-content:center;min-width:32px;height:23px;padding:0 6px;
@@ -376,16 +377,18 @@
     <button class="tb-btn" id="tLocate" title="Meinen Standort anzeigen"><svg viewBox="0 0 24 24"><path d="M12 22s7-7.6 7-13a7 7 0 1 0-14 0c0 5.4 7 13 7 13z"/><circle cx="12" cy="9" r="2.4"/></svg></button>
     <button class="tb-btn" id="tSearch" title="Suche (Ort/Adresse)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     <div class="tb-sep"></div>
+    <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
+    <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
+    <button class="tb-btn" id="tPoi" title="POI einzeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+    <div class="tb-sep"></div>
     <button class="tb-btn" id="tDraw" title="Route zeichnen"><svg viewBox="0 0 24 24"><path d="M4 20l3.6-.9L18.5 8.2l-2.7-2.7L4.9 16.4z"/><path d="M14.5 6.5l3 3"/></svg></button>
     <button class="tb-btn" id="tInsert" title="Wegpunkt zwischen zwei bestehende einfügen"><svg viewBox="0 0 24 24"><path d="M3 19h18"/><circle cx="3" cy="19" r="1.6" fill="currentColor" stroke="none"/><circle cx="21" cy="19" r="1.6" fill="currentColor" stroke="none"/><path d="M12 4v9M7.5 8.5h9"/></svg></button>
     <button class="tb-btn" id="tReverse" title="Route umkehren"><svg viewBox="0 0 24 24"><path d="M7 8h11l-3.2-3.2M17 16H6l3.2 3.2"/></svg></button>
     <button class="tb-btn" id="tSegSel" title="Abschnitts-Profil: Wegpunkte wählen (auch Strg+Klick), dann oben Profil setzen"><svg viewBox="0 0 24 24"><path d="M4 18c5 0 5-12 10-12s5 12 6 12"/><circle cx="4" cy="18" r="2.4" fill="currentColor" stroke="none"/><circle cx="14" cy="6" r="2.4" fill="currentColor" stroke="none"/></svg></button>
-    <button class="tb-btn" id="tNogo" title="Kreisförmige No-Go-Area zeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></button>
-    <button class="tb-btn" id="tRadius" title="Bewegungsradius um Wohnsitz ermitteln – ohne Gewähr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
     <button class="tb-btn" id="tDelLast" title="Letzten Punkt löschen"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h7.5a4.5 4.5 0 0 1 4.5 4.5"/><path d="M18 11.3a2.7 2.7 0 0 0-2.7 2.7c0 2 2.7 4.6 2.7 4.6s2.7-2.6 2.7-4.6a2.7 2.7 0 0 0-2.7-2.7z"/><circle cx="18" cy="14" r="1.05"/></svg></button>
+    <button class="tb-btn" id="tLock" title="Gewählten Abschnitt sperren (wird nicht neu berechnet, bleibt beim Neuladen erhalten)"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
     <button class="tb-btn" id="tSave" title="Routendaten speichern (wird beim nächsten Öffnen geladen)"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 13h8v6H8z"/></svg></button>
     <button class="tb-btn" id="tClear" title="Routendaten löschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg></button>
-    <button class="tb-btn" id="tPoi" title="POI einzeichnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
     <button class="tb-btn" id="tGradient" title="Steigungscodierung"><svg viewBox="0 0 24 24"><path d="M3 19l6-9 4 5 3-4 5 8z"/></svg></button>
     <button class="tb-btn" id="tUndo" title="Letzte Aktion rückgängig machen"><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 5 5v1"/></svg></button>
     <div class="tb-sep"></div>
@@ -445,18 +448,18 @@
   }
   function gmaps(lat,lng){ return 'https://www.google.com/maps/search/?api=1&query='+lat.toFixed(6)+','+lng.toFixed(6); }
 
-  function wpIcon(i,w,isLeg){
-    var cls='wp-pin'; if(isLeg) cls+=' leg'; if(w&&w.sel) cls+=' sel';
+  function wpIcon(i,w,isLeg,isLock){
+    var cls='wp-pin'; if(isLeg) cls+=' leg'; if(isLock) cls+=' lock'; if(w&&w.sel) cls+=' sel';
     return L.divIcon({className:'',html:'<div class="'+cls+'"><span>'+(i+1)+'</span></div>',
       iconSize:[26,26],iconAnchor:[13,26],popupAnchor:[0,-24]});
   }
   function reindexWaypoints(){
     waypoints.forEach(function(w,i){
-      // Ein Wegpunkt gehört zu einem Abschnitts-Profil, wenn er ein überschriebenes Bein
-      // STARTET (w.legProfile) ODER es BEENDET (Vorgänger hat legProfile) → so wird auch
-      // der letzte Wegpunkt des Abschnitts markiert.
-      var isLeg = !!w.legProfile || (i>0 && !!waypoints[i-1].legProfile);
-      w.marker.setIcon(wpIcon(i,w,isLeg));
+      // Ein Wegpunkt gehört zu einem Abschnitt, wenn er das Bein STARTET (w.legProfile/w.lock)
+      // ODER es BEENDET (Vorgänger hat es) → so wird auch der letzte Wegpunkt markiert.
+      var isLeg  = !!w.legProfile || (i>0 && !!waypoints[i-1].legProfile);
+      var isLock = !!w.lock       || (i>0 && !!waypoints[i-1].lock);
+      w.marker.setIcon(wpIcon(i,w,isLeg,isLock));
     });
     document.getElementById('sWp').textContent = waypoints.length;
   }
@@ -485,12 +488,12 @@
 
   /* ---------------- Undo: Schnappschüsse der Wegpunktliste ---------------- */
   function snapshot(){
-    undoStack.push(waypoints.map(function(w){ return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile}; }));
+    undoStack.push(waypoints.map(function(w){ return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile,lock:w.lock}; }));
     if(undoStack.length>60) undoStack.shift();
   }
   function rebuildWaypoints(list){
     waypoints.forEach(function(w){ map.removeLayer(w.marker); }); waypoints=[];
-    list.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; });
+    list.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; w.lock=p.lock; });
     reindexWaypoints(); recompute(); updateSegPanel();
   }
   function undo(){
@@ -569,15 +572,56 @@
   }
   function clearSectionOverride(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].legProfile; recompute(); reindexWaypoints(); updateSegPanel(); }
   function clearAllOverrides(){ if(!hasOverrides())return; snapshot(); waypoints.forEach(function(w){ delete w.legProfile; }); recompute(); reindexWaypoints(); updateSegPanel(); setStatus('Alle Abschnitts-Profile zurückgesetzt.'); }
+
+  /* ---------------- Gesperrte Abschnitte (Lock) ----------------
+     w.lock = {coords:[[lat,lng,ele]…], dist, asc} am Start-Wegpunkt eines Beins. Gesperrte
+     Beine werden beim Routing NICHT neu berechnet, sondern aus der gespeicherten Geometrie
+     übernommen — bleibt so über Neuladen/Neustart erhalten (auto-gespeichert in localStorage). */
+  function roundCoord(c){ return [ +c[0].toFixed(5), +c[1].toFixed(5), (c[2]==null?null:Math.round(c[2])) ]; }
+  function hasLocks(){ return waypoints.some(function(w){ return !!w.lock; }); }
+  function lockSections(){
+    var secs=[];
+    for(var k=0;k<waypoints.length-1;k++){
+      if(!waypoints[k].lock) continue;
+      var last=secs[secs.length-1];
+      if(last && last.endLeg===k-1){ last.endLeg=k; } else secs.push({startLeg:k,endLeg:k});
+    }
+    return secs.map(function(s){ return {a:s.startLeg, b:s.endLeg+1}; });
+  }
+  function lockSelection(){
+    var sel=selectionIndices();
+    if(sel.length<2){ setStatus('Zum Sperren erst ≥2 Wegpunkte wählen (Abschnitts-Werkzeug oder Strg+Klick).','err'); return; }
+    var min=sel[0], max=sel[sel.length-1], globalEng=currentEngine();
+    setStatus('Abschnitt WP'+(min+1)+'–WP'+(max+1)+' wird gesperrt (Geometrie wird fixiert) …','busy');
+    snapshot();
+    var seq=Promise.resolve(), done=0, failed=0;
+    var _loop=function(k){
+      var eng=waypoints[k].legProfile||globalEng;
+      seq=seq.then(function(){
+        return routeRun([waypoints[k],waypoints[k+1]], eng).then(function(res){
+          waypoints[k].lock={coords:res.coords.map(roundCoord), dist:res.dist, asc:res.asc}; done++;
+        }).catch(function(){ failed++; });
+      });
+    };
+    for(var k=min;k<max;k++) _loop(k);
+    seq.then(function(){
+      clearSelection(); reindexWaypoints(); updateSegPanel(); recompute(); saveState(true);
+      setStatus(done+' Bein(e) gesperrt'+(failed?(' ('+failed+' nicht routbar)'):'')+
+        ' & gespeichert — beim Neuladen nicht neu berechnet.', failed?'err':'');
+    });
+  }
+  function unlockSection(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].lock; recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Abschnitt entsperrt — wird wieder normal geroutet.'); }
+  function clearAllLocks(){ if(!hasLocks())return; snapshot(); waypoints.forEach(function(w){ delete w.lock; }); recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Alle Sperren aufgehoben.'); }
+
   function updateSegPanel(){
     var el=document.getElementById('segPanel'); if(!el) return;
-    var sel=selectionIndices(), secs=overrideSections();
-    if(!sel.length && !secs.length){ el.style.display='none'; el.innerHTML=''; return; }
+    var sel=selectionIndices(), secs=overrideSections(), locks=lockSections();
+    if(!sel.length && !secs.length && !locks.length){ el.style.display='none'; el.innerHTML=''; return; }
     var html='';
     if(sel.length){
       html+= sel.length<2
-        ? '<div class="hint" style="margin:0 0 8px">Abschnitts-Profil: noch einen Wegpunkt wählen (mind. 2). <button class="seg-x" id="segClear">Auswahl aufheben</button></div>'
-        : '<div class="hint" style="margin:0 0 8px"><b>Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+' gewählt.</b> Wähle oben ein Profil — es gilt <b>nur</b> für diesen Abschnitt. <button class="seg-x" id="segClear">Auswahl aufheben</button></div>';
+        ? '<div class="hint" style="margin:0 0 8px">Abschnitt wählen: noch einen Wegpunkt anklicken (mind. 2). <button class="seg-x" id="segClear">Auswahl aufheben</button></div>'
+        : '<div class="hint" style="margin:0 0 8px"><b>Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+' gewählt.</b> Oben ein Profil wählen (gilt nur hier) <b>oder</b> mit dem Schloss-Button sperren. <button class="seg-x" id="segClear">Auswahl aufheben</button></div>';
     }
     if(secs.length){
       html+='<div class="seg-list-h">Abschnitts-Profile aktiv</div>';
@@ -586,11 +630,22 @@
       });
       html+='<button class="btn" id="segResetAll" style="margin-top:6px;justify-content:center">Alle Abschnitts-Profile zurücksetzen</button>';
     }
+    if(locks.length){
+      html+='<div class="seg-list-h" style="margin-top:10px">🔒 Gesperrte Abschnitte</div>';
+      locks.forEach(function(s,i){
+        html+='<div class="seg-row"><span>WP'+(s.a+1)+'–WP'+(s.b+1)+'</span><span class="seg-prof">fixiert</span><button class="seg-x" data-lock="'+i+'" title="Sperre aufheben">✕</button></div>';
+      });
+      html+='<button class="btn" id="lockResetAll" style="margin-top:6px;justify-content:center">Alle Sperren aufheben</button>';
+    }
     el.innerHTML=html; el.style.display='';
     var sc=document.getElementById('segClear'); if(sc) sc.onclick=clearSelection;
     var ra=document.getElementById('segResetAll'); if(ra) ra.onclick=clearAllOverrides;
+    var la=document.getElementById('lockResetAll'); if(la) la.onclick=clearAllLocks;
     [].forEach.call(el.querySelectorAll('button[data-sec]'),function(b){
       b.onclick=function(){ var s=overrideSections()[+b.getAttribute('data-sec')]; if(s) clearSectionOverride(s.a,s.b); };
+    });
+    [].forEach.call(el.querySelectorAll('button[data-lock]'),function(b){
+      b.onclick=function(){ var s=lockSections()[+b.getAttribute('data-lock')]; if(s) unlockSection(s.a,s.b); };
     });
   }
 
@@ -821,20 +876,25 @@
   function buildRuns(globalEng){
     var runs=[];
     for(var k=0;k<waypoints.length-1;k++){
+      if(waypoints[k].lock){                       // gesperrtes Bein: eigener Lauf aus Cache
+        runs.push({type:'lock', a:k, b:k+1, geom:waypoints[k].lock});
+        continue;
+      }
       var eff=waypoints[k].legProfile || globalEng;
       var last=runs[runs.length-1];
-      if(last && last.eng.engine===eff.engine && last.eng.profile===eff.profile){ last.b=k+1; }
-      else runs.push({a:k,b:k+1,eng:eff});
+      if(last && last.type==='route' && last.eng.engine===eff.engine && last.eng.profile===eff.profile){ last.b=k+1; }
+      else runs.push({type:'route', a:k, b:k+1, eng:eff});
     }
     return runs;
   }
   function doSegmentedRoute(){
     var globalEng=currentEngine();
     var runs=buildRuns(globalEng);
-    setStatus('Route mit '+overrideSections().length+' Abschnitts-Profil(en) wird berechnet …','busy');
+    setStatus('Route wird berechnet ('+overrideSections().length+' Sonderprofil(e), '+lockSections().length+' gesperrt) …','busy');
     var results=new Array(runs.length), seq=Promise.resolve();
     runs.forEach(function(run,ri){
       seq=seq.then(function(){
+        if(run.type==='lock'){ results[ri]={coords:run.geom.coords, dist:run.geom.dist, asc:run.geom.asc, locked:true}; return; }
         var wps=waypoints.slice(run.a, run.b+1);
         return routeRun(wps, run.eng).then(function(res){ results[ri]=res; })
           .catch(function(){                       // sichtbarer Fallback: dieser Abschnitt als Luftlinie
@@ -853,7 +913,7 @@
       });
       routeDist=dist; routeAsc=asc; drawRoute(all,false); updateStats();
       setStatus((fb?('⚠ '+fb+' Abschnitt(e) per Luftlinie überbrückt · '):'')+
-        overrideSections().length+' Sonderprofil(e) · '+runs.length+' Läufe · '+
+        overrideSections().length+' Sonderprofil(e) · '+lockSections().length+' gesperrt · '+
         (dist/1000).toFixed(1)+' km · '+Math.round(asc)+' Hm', fb?'err':'');
     });
   }
@@ -862,7 +922,7 @@
     clearStages();
     if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0;updateStats();
       setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. Für Wegpunkte „Route zeichnen" in der Toolleiste aktivieren.'); return; }
-    if(hasOverrides()){ doSegmentedRoute(); return; }
+    if(hasOverrides()||hasLocks()){ doSegmentedRoute(); return; }
     var eng=currentEngine();
     if(eng.engine==='graphhopper'){ routeGraphHopper(eng.profile); return; }
     if(eng.engine==='upload'){ routeUpload(eng.profile, RAW_URLS[eng.profile]); return; }
@@ -1118,7 +1178,7 @@
      Bewusster Bruch mit „kein localStorage": expliziter Speichern-Button + Auto-Laden
      des letzten Stands beim Öffnen. */
   var STORE_KEY='waypoint_route_v1';
-  function saveState(){
+  function saveState(silent){
     try{
       var ctr=map.getCenter();
       var data={ v:1,
@@ -1130,13 +1190,13 @@
         lyrCycle:document.getElementById('lyrCycle').checked,
         lyrTopo:document.getElementById('lyrTopo').checked,
         view:{c:[ctr.lat,ctr.lng], z:map.getZoom()},
-        waypoints:waypoints.map(function(w){return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile};}),
+        waypoints:waypoints.map(function(w){return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile,lock:w.lock};}),
         nogos:nogos.map(function(n){return {lat:n.lat,lng:n.lng,radius:n.radius};}),
         pois:pois.map(function(p){return {lat:p.lat,lng:p.lng,name:p.name};})
       };
       localStorage.setItem(STORE_KEY, JSON.stringify(data));
-      setStatus('Routendaten gespeichert ('+waypoints.length+' WP) — werden beim nächsten Öffnen automatisch geladen.');
-    }catch(e){ setStatus('Speichern fehlgeschlagen ('+(e.message||e)+'). Bei file:// kann der Browser localStorage sperren.','err'); }
+      if(!silent) setStatus('Routendaten gespeichert ('+waypoints.length+' WP) — werden beim nächsten Öffnen automatisch geladen.');
+    }catch(e){ setStatus('Speichern fehlgeschlagen ('+(e.message||e)+'). Bei file:// kann der Browser localStorage sperren, gesperrte Abschnitte können das Limit sprengen.','err'); }
   }
   function loadState(){
     var raw; try{ raw=localStorage.getItem(STORE_KEY); }catch(e){ return false; }
@@ -1148,7 +1208,7 @@
     if(d.ghKey!=null) document.getElementById('ghKey').value=d.ghKey;
     if(typeof updateProfileAuxFields==='function') updateProfileAuxFields();
     if(d.interval!=null) document.getElementById('interval').value=d.interval;
-    d.waypoints.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; });
+    d.waypoints.forEach(function(p){ var w=addWaypoint(p.lat,p.lng,true,p.name); w.legProfile=p.legProfile; w.lock=p.lock; });
     if(d.nogos) d.nogos.forEach(function(n){ addNogo(L.latLng(n.lat,n.lng), n.radius); });
     if(d.pois) d.pois.forEach(function(p){ createPoi(p.lat,p.lng,p.name); });
     if(d.lyrCycle){ document.getElementById('lyrCycle').checked=true; map.addLayer(cycle); }
@@ -1256,7 +1316,8 @@
   document.getElementById('tRadius').onclick=function(){ setMode('radius','tRadius'); };
   document.getElementById('tDelLast').onclick=delLast;
   document.getElementById('tUndo').onclick=undo;
-  document.getElementById('tSave').onclick=saveState;
+  document.getElementById('tLock').onclick=lockSelection;
+  document.getElementById('tSave').onclick=function(){ saveState(); };
   document.getElementById('tClear').onclick=clearAll;
   document.getElementById('tPoi').onclick=function(){ setMode('poi','tPoi'); };
   document.getElementById('tGradient').onclick=function(){

@@ -37,6 +37,13 @@
   Profil-Dropdown nur für den Abschnitt, global bleibt. Routing zerlegt die Route in Läufe gleicher
   effektiver Engine (`buildRuns`/`doSegmentedRoute`), routet jeden Lauf einzeln und näht die
   Geometrie zusammen (doppelter Nahtpunkt verworfen). Nur aktiv, wenn `hasOverrides()`.
+- **Gesperrte Abschnitte (Lock):** `w.lock = {coords,dist,asc}` am Start-Wegpunkt eines Beins
+  speichert dessen berechnete Geometrie. Gesperrte Beine werden beim Routing NICHT neu berechnet,
+  sondern aus dem Cache übernommen (`buildRuns` erzeugt `type:'lock'`-Läufe). Sperren via
+  Wegpunkt-Auswahl + Schloss-Button (`lockSelection` routet jedes Bein einmal, fixiert die
+  Geometrie) und **auto-speichert** sofort in `localStorage` → bleibt über Neuladen erhalten,
+  manuell editierte Strecken werden nicht überschrieben. Segmentierter Pfad aktiv bei
+  `hasOverrides() || hasLocks()`. Lock-Geometrie kann groß werden → localStorage-Limit beachten.
 
 ## Routing-Engines (hart erarbeitetes Wissen — bitte beachten)
 - **① BRouter.de (Primär, verifiziert):** GET `https://brouter.de/brouter`, **CORS offen**.
@@ -60,10 +67,11 @@
 
 ## Konventionen / Vorlieben
 - **Toolleisten-Funktionsreihenfolge NICHT ändern** — nur Styling. Aktuelle Reihenfolge:
-  Zoom In · Zoom Out · Standort · Suche · Route zeichnen · Wegpunkt einfügen · Route umkehren ·
-  Abschnitts-Profil · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · letzten Punkt löschen ·
-  Routendaten speichern · Routendaten löschen · POI · Steigungscodierung ·
-  letzte Aktion rückgängig · Transparenz-Slider.
+  Zoom In · Zoom Out · Standort · Suche · | · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · POI ·
+  | · Route zeichnen · Wegpunkt einfügen · Route umkehren · Abschnitts-Profil ·
+  letzten Punkt löschen · Abschnitt sperren · Routendaten speichern · Routendaten löschen ·
+  Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  (Karten-Annotationen oben gruppiert, alle Routing-/Routendaten-Funktionen darunter.)
 - Hauptpanel und Toolleiste: beide **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
 - Funktionalität bei Restyles erhalten.
