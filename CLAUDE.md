@@ -70,7 +70,7 @@
   Zoom In · Zoom Out · Standort · Suche · | · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · POI ·
   | · Route zeichnen · Wegpunkt einfügen · Route umkehren · Abschnitts-Profil ·
   letzten Punkt löschen · Abschnitt sperren · Routendaten speichern · Routendaten löschen ·
-  Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  Auf Preset zurücksetzen · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
   (Karten-Annotationen oben gruppiert, alle Routing-/Routendaten-Funktionen darunter.)
 - Hauptpanel und Toolleiste: beide **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
