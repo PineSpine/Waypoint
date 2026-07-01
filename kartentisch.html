@@ -449,12 +449,17 @@
 
   /* ---------------- Map & layers ---------------- */
   var map = L.map('map',{zoomControl:false,attributionControl:true}).setView([50.6,10.4],7);
+  // Eigene Pane für das Radnetz-Overlay ÜBER der Routenlinie (overlayPane=400),
+  // damit Fernradweg-Nummern lesbar bleiben; Kacheln fangen keine Klicks ab.
+  map.createPane('cycleTop');
+  map.getPane('cycleTop').style.zIndex = 450;
+  map.getPane('cycleTop').style.pointerEvents = 'none';
   var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
   var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
     maxZoom:17, subdomains:'abc', attribution:'© OpenTopoMap (CC-BY-SA)'});
   var cycle = L.tileLayer('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{
-    maxZoom:18, opacity:.85, attribution:'Radrouten © waymarkedtrails.org'});
+    maxZoom:18, opacity:.85, pane:'cycleTop', attribution:'Radrouten © waymarkedtrails.org'});
 
   /* ---------------- State ---------------- */
   var waypoints = [];          // {lat,lng,marker}
