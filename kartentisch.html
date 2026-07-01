@@ -705,6 +705,31 @@
   }
   function unlockSection(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].lock; recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Abschnitt entsperrt — wird wieder normal geroutet.'); }
   function clearAllLocks(){ if(!hasLocks())return; snapshot(); waypoints.forEach(function(w){ delete w.lock; }); recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Alle Sperren aufgehoben.'); }
+  /* Route umkehren: Leg-Eigenschaften (legProfile/lock) hängen am START-Wegpunkt eines Beins.
+     Ein blankes waypoints.reverse() trägt sie mit dem physischen Wegpunkt mit → das Bein-Attribut
+     rutscht um ein Bein. Darum: Bein-Attribute nach Bein-Index einsammeln, Array umkehren, dann
+     auf den neuen Start-Wegpunkt (index n-2-i) legen. Lock-Geometrie ist richtungsabhängig
+     (start→end, wird beim Nähen per slice(1) am Nahtpunkt gekürzt) → coords umdrehen. Höhenmeter
+     bergauf sind ebenfalls richtungsabhängig: asc(B→A)=asc(A→B)−ele(B)+ele(A). */
+  function reverseRoute(){
+    var n=waypoints.length, legs=[], i;
+    for(i=0;i<n-1;i++){
+      var lk=waypoints[i].lock, lock;
+      if(lk){
+        var c=lk.coords, e0=c[0]&&c[0][2], eN=c[c.length-1]&&c[c.length-1][2];
+        var asc=(e0!=null&&eN!=null)?Math.max(0, lk.asc-eN+e0):lk.asc;
+        lock={coords:c.slice().reverse(), dist:lk.dist, asc:asc};
+      }
+      legs.push({lp:waypoints[i].legProfile, lock:lock});
+    }
+    waypoints.forEach(function(w){ delete w.legProfile; delete w.lock; });
+    waypoints.reverse();
+    for(i=0;i<n-1;i++){
+      var ns=n-2-i;
+      if(legs[i].lp)   waypoints[ns].legProfile=legs[i].lp;
+      if(legs[i].lock) waypoints[ns].lock=legs[i].lock;
+    }
+  }
 
   function updateSegPanel(){
     var el=document.getElementById('segPanel'); if(!el) return;
@@ -1464,7 +1489,9 @@
   document.getElementById('tInsert').onclick=function(){ setMode('insert','tInsert'); };
   document.getElementById('tSegSel').onclick=function(){ setMode('segsel','tSegSel'); updateSegPanel(); };
   document.getElementById('tReverse').onclick=function(){
-    if(waypoints.length<2)return; snapshot(); waypoints.reverse(); reindexWaypoints(); recompute(); setStatus('Route umgekehrt.'); };
+    if(waypoints.length<2)return; snapshot(); reverseRoute(); reindexWaypoints(); recompute();
+    if(hasLocks()) saveState(true);
+    setStatus('Route umgekehrt.'); };
   document.getElementById('tNogo').onclick=function(){ setMode('nogo','tNogo'); };
   document.getElementById('tRadius').onclick=function(){ setMode('radius','tRadius'); };
   document.getElementById('tDelLast').onclick=delLast;
