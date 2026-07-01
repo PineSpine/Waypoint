@@ -32,10 +32,14 @@
   Overpass-Loader (Camping/Supermarkt/Wasser/Radladen mit Google-Maps-Links),
   GPX-Import (Drag&Drop) + GPX-Export, Steigungscodierung, No-Go-Kreise, POIs, Bewegungsradius.
 - **Profil-Feinabstimmung (`tune`):** BRouter akzeptiert Profil-Parameter direkt in der URL
-  (`&profile:<name>=<wert>`, von brouter.de unterstützt, ohne Upload/Key). `tuneParam()` hängt sie
-  nur an Standard-`trekking`/`fastbike` an. Schalter: `consider_forest` (Grün/Wald),
+  (`&profile:<name>=<wert>`, von brouter.de unterstützt, ohne Upload/Key). `tuneParam(profile,t)`
+  hängt sie nur an Standard-`trekking`/`fastbike` an. Schalter: `consider_forest` (Grün/Wald),
   `consider_noise` (ruhig/leise), `avoid_unsafe`, `stick_to_cycleroutes`, `consider_river`,
   `consider_town`; Regler „Steigungen meiden" → `uphillcost` (0..100). „Unbefestigt" = Gravel-Engine.
+  **Scoping wie beim Profil-Dropdown:** ohne Auswahl global (Objekt `tune`), bei aktiver
+  Auswahl (≥2 WP) nur auf den Abschnitt — das Tuning wird als `eng.tune` im Abschnitts-Override
+  (`w.legProfile`) gespeichert und je Lauf via `fetchRoute(...,eng.tune)` gesendet; globale Läufe
+  tragen `globalEng.tune=tune`. `buildRuns` gruppiert Läufe per Referenzgleichheit (`last.eng===eff`).
 - **Rundweg (`generateRoundtrip`, experimentell):** key-frei. N Punkte auf einem Kreis um die
   Kartenmitte (Radius aus Wunsch-Distanz / Detour-Faktor 1,55), per BRouter durchrouten, zurück zum
   Start. „Andere Variante" erhöht `rtSeed` (Startrichtung). Ersetzt die Route (Undo möglich).

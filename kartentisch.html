@@ -328,6 +328,7 @@
       <details class="hint-acc" style="margin-top:7px">
         <summary>Feinabstimmung — Profil tunen (BRouter Trekking/Schnell)</summary>
         <div style="margin-top:6px">
+          <div class="hint" id="tuneScope" style="margin:0 0 8px">Wirkt global (kein Abschnitt gewählt).</div>
           <div class="tog"><span>🌳 Grün / Wald bevorzugen</span>
             <label class="sw"><input type="checkbox" id="tuneForest"><span class="tr"></span><span class="kn"></span></label></div>
           <div class="tog"><span>🤫 Ruhige, leise Wege</span>
@@ -602,12 +603,12 @@
      Bein bestimmt und gleiche aufeinanderfolgende Beine zu einem Lauf zusammengefasst. */
   function selectionIndices(){ var a=[]; waypoints.forEach(function(w,i){ if(w.sel) a.push(i); }); return a; }
   function toggleSelect(w){
-    w.sel=!w.sel; reindexWaypoints(); updateSegPanel();
+    w.sel=!w.sel; reindexWaypoints(); updateSegPanel(); refreshTuneContext();
     var n=selectionIndices().length;
-    setStatus(n? (n+' Wegpunkt(e) gewählt — oben im Profil-Dropdown ein Profil für diesen Abschnitt setzen.')
+    setStatus(n? (n+' Wegpunkt(e) gewählt — Profil-Dropdown UND Feinabstimmung gelten jetzt nur für diesen Abschnitt.')
                : 'Auswahl leer.');
   }
-  function clearSelection(){ waypoints.forEach(function(w){ w.sel=false; }); reindexWaypoints(); updateSegPanel(); }
+  function clearSelection(){ waypoints.forEach(function(w){ w.sel=false; }); reindexWaypoints(); updateSegPanel(); refreshTuneContext(); }
   function profileLabel(){
     var s=document.getElementById('profile'); var o=s.options[s.selectedIndex];
     var t=(o?o.text:s.value)||''; return t.split(' — ')[0].replace(/^[^0-9A-Za-zÄÖÜäöü„]+/,'').trim()||s.value;
@@ -619,7 +620,7 @@
     for(var k=0;k<waypoints.length-1;k++){
       var lp=waypoints[k].legProfile; if(!lp) continue;
       var last=secs[secs.length-1];
-      if(last && last.endLeg===k-1 && last.eng.engine===lp.engine && last.eng.profile===lp.profile){ last.endLeg=k; }
+      if(last && last.endLeg===k-1 && last.eng===lp){ last.endLeg=k; }   // gleiche Override-Referenz
       else secs.push({startLeg:k,endLeg:k,eng:lp});
     }
     return secs.map(function(s){ return {a:s.startLeg, b:s.endLeg+1, eng:s.eng}; });
@@ -627,12 +628,35 @@
   function applyProfileToSelection(){
     var sel=selectionIndices(); if(sel.length<2){ setStatus('Für ein Abschnitts-Profil mind. 2 Wegpunkte wählen.','err'); return false; }
     var min=sel[0], max=sel[sel.length-1];
-    var eng=currentEngine(); eng.label=profileLabel();
+    var eng=currentEngine(); eng.label=profileLabel(); eng.tune=readTuneUI();   // aktuelles Tuning in den Abschnitt übernehmen
     snapshot();
     for(var k=min;k<max;k++) waypoints[k].legProfile=eng;
     clearSelection(); recompute();
-    setStatus('Abschnitt WP'+(min+1)+'–WP'+(max+1)+': Profil „'+eng.label+'" gesetzt — globales Profil unverändert.');
+    setStatus('Abschnitt WP'+(min+1)+'–WP'+(max+1)+': Profil „'+eng.label+'"'+(tuneActive(eng.tune)?' (getunt)':'')+' gesetzt — global unverändert.');
     return true;
+  }
+  /* Feinabstimmung nur auf den gewählten Abschnitt anwenden (bestehende Engine/Profil beibehalten) */
+  function applyTuneToSelection(){
+    var sel=selectionIndices(); if(sel.length<2) return;
+    var min=sel[0], max=sel[sel.length-1];
+    var base=waypoints[min].legProfile;
+    var eng = base ? {engine:base.engine,profile:base.profile,label:base.label} : (function(){ var e=currentEngine(); e.label=profileLabel(); return e; })();
+    eng.tune=readTuneUI();
+    for(var k=min;k<max;k++) waypoints[k].legProfile=eng;
+    reindexWaypoints(); updateSegPanel(); recompute();
+    setStatus('Feinabstimmung gilt nur für Abschnitt WP'+(min+1)+'–WP'+(max+1)+' — der Rest bleibt ungetunt.');
+  }
+  /* Tuning-Regler zeigen je nach Auswahl den Abschnitts- oder den globalen Kontext */
+  function refreshTuneContext(){
+    var sel=selectionIndices(), scope=document.getElementById('tuneScope');
+    if(sel.length>=2){
+      var ov=waypoints[sel[0]].legProfile;
+      writeTuneUI(ov&&ov.tune ? ov.tune : {forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0});
+      if(scope){ scope.textContent='Wirkt nur auf Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+'.'; scope.style.display=''; }
+    } else {
+      writeTuneUI(tune);
+      if(scope){ scope.textContent='Wirkt global (kein Abschnitt gewählt).'; scope.style.display=''; }
+    }
   }
   function clearSectionOverride(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].legProfile; recompute(); reindexWaypoints(); updateSegPanel(); }
   function clearAllOverrides(){ if(!hasOverrides())return; snapshot(); waypoints.forEach(function(w){ delete w.legProfile; }); recompute(); reindexWaypoints(); updateSegPanel(); setStatus('Alle Abschnitts-Profile zurückgesetzt.'); }
@@ -685,12 +709,12 @@
     if(sel.length){
       html+= sel.length<2
         ? '<div class="hint" style="margin:0 0 8px">Abschnitt wählen: noch einen Wegpunkt anklicken (mind. 2). <button class="seg-x" id="segClear">Auswahl aufheben</button></div>'
-        : '<div class="hint" style="margin:0 0 8px"><b>Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+' gewählt.</b> Oben ein Profil wählen (gilt nur hier) <b>oder</b> mit dem Schloss-Button sperren. <button class="seg-x" id="segClear">Auswahl aufheben</button></div>';
+        : '<div class="hint" style="margin:0 0 8px"><b>Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+' gewählt.</b> Profil-Dropdown, Feinabstimmung und Schloss gelten jetzt <b>nur</b> für diesen Abschnitt. <button class="seg-x" id="segClear">Auswahl aufheben</button></div>';
     }
     if(secs.length){
       html+='<div class="seg-list-h">Abschnitts-Profile aktiv</div>';
       secs.forEach(function(s,i){
-        html+='<div class="seg-row"><span>WP'+(s.a+1)+'–WP'+(s.b+1)+'</span><span class="seg-prof">'+s.eng.label+'</span><button class="seg-x" data-sec="'+i+'" title="Abschnitt auf globales Profil zurücksetzen">✕</button></div>';
+        html+='<div class="seg-row"><span>WP'+(s.a+1)+'–WP'+(s.b+1)+'</span><span class="seg-prof">'+s.eng.label+(tuneActive(s.eng.tune)?' · getunt':'')+'</span><button class="seg-x" data-sec="'+i+'" title="Abschnitt auf globales Profil zurücksetzen">✕</button></div>';
       });
       html+='<button class="btn" id="segResetAll" style="margin-top:6px;justify-content:center">Alle Abschnitts-Profile zurücksetzen</button>';
     }
@@ -808,22 +832,24 @@
     return '&nogos='+nogos.map(function(n){return n.lng.toFixed(6)+','+n.lat.toFixed(6)+','+Math.round(n.radius);}).join('|');
   }
   /* Feinabstimmung als BRouter-Profil-Parameter (nur Standard-Trekking/Schnell unterstützen sie) */
-  function tuneParam(profile){
+  function tuneActive(t){ return !!t && (t.forest||t.noise||t.avoid||t.cycle||t.river||t.town||t.uphill>0); }
+  function tuneParam(profile,t){
+    t=t||tune;                                       // ohne Abschnitts-Tuning: globales Tuning
     if(profile!=='trekking' && profile!=='fastbike') return '';
     var p='';
-    if(tune.forest) p+='&profile:consider_forest=1';
-    if(tune.noise)  p+='&profile:consider_noise=1';
-    if(tune.avoid)  p+='&profile:avoid_unsafe=1';
-    if(tune.cycle)  p+='&profile:stick_to_cycleroutes=1';
-    if(tune.river)  p+='&profile:consider_river=1';
-    if(tune.town)   p+='&profile:consider_town=1';
-    if(tune.uphill>0) p+='&profile:uphillcost='+(tune.uphill*10);   // Regler 0..10 → uphillcost 0..100
+    if(t.forest) p+='&profile:consider_forest=1';
+    if(t.noise)  p+='&profile:consider_noise=1';
+    if(t.avoid)  p+='&profile:avoid_unsafe=1';
+    if(t.cycle)  p+='&profile:stick_to_cycleroutes=1';
+    if(t.river)  p+='&profile:consider_river=1';
+    if(t.town)   p+='&profile:consider_town=1';
+    if(t.uphill>0) p+='&profile:uphillcost='+(t.uphill*10);   // Regler 0..10 → uphillcost 0..100
     return p;
   }
-  function fetchRoute(host,profile,wps){
+  function fetchRoute(host,profile,wps,t){
     wps=wps||waypoints;
     var ll=wps.map(function(w){return w.lng.toFixed(6)+','+w.lat.toFixed(6);}).join('|');
-    var url=host+'?lonlats='+ll+'&profile='+encodeURIComponent(profile)+nogoParam()+tuneParam(profile)+'&alternativeidx=0&format=geojson';
+    var url=host+'?lonlats='+ll+'&profile='+encodeURIComponent(profile)+nogoParam()+tuneParam(profile,t)+'&alternativeidx=0&format=geojson';
     return fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
   }
   function extractGeo(geo){
@@ -948,7 +974,7 @@
       return ensureUploadPid(eng.profile).then(function(pid){
         return fetchRoute('https://brouter.de/brouter', pid, wps).then(extractGeo); });
     }
-    return fetchRoute(hostFor(eng.engine), eng.profile, wps).then(extractGeo);
+    return fetchRoute(hostFor(eng.engine), eng.profile, wps, eng.tune).then(extractGeo);
   }
   function buildRuns(globalEng){
     var runs=[];
@@ -957,15 +983,15 @@
         runs.push({type:'lock', a:k, b:k+1, geom:waypoints[k].lock});
         continue;
       }
-      var eff=waypoints[k].legProfile || globalEng;
-      var last=runs[runs.length-1];
-      if(last && last.type==='route' && last.eng.engine===eff.engine && last.eng.profile===eff.profile){ last.b=k+1; }
+      var eff=waypoints[k].legProfile || globalEng;   // Abschnitts-Override trägt eigenes eff.tune,
+      var last=runs[runs.length-1];                    // globalEng trägt das globale Tuning
+      if(last && last.type==='route' && last.eng===eff){ last.b=k+1; }  // gleiche Referenz → ein Lauf
       else runs.push({type:'route', a:k, b:k+1, eng:eff});
     }
     return runs;
   }
   function doSegmentedRoute(myId){
-    var globalEng=currentEngine();
+    var globalEng=currentEngine(); globalEng.tune=tune;   // globale Beine tragen das globale Tuning
     var runs=buildRuns(globalEng);
     setStatus('Route wird berechnet ('+overrideSections().length+' Sonderprofil(e), '+lockSections().length+' gesperrt) …','busy');
     var results=new Array(runs.length), seq=Promise.resolve();
@@ -1351,14 +1377,23 @@
 
   /* ---- Feinabstimmung (Profil-Parameter) ---- */
   var tuneMap={tuneForest:'forest',tuneNoise:'noise',tuneAvoid:'avoid',tuneCycle:'cycle',tuneRiver:'river',tuneTown:'town'};
-  function syncTuneUI(){
-    Object.keys(tuneMap).forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=!!tune[tuneMap[id]]; });
-    var u=document.getElementById('tuneUphill'); if(u){ u.value=tune.uphill||0; document.getElementById('tuneUphillVal').textContent=tune.uphill||0; }
+  function readTuneUI(){
+    var t={}; Object.keys(tuneMap).forEach(function(id){ t[tuneMap[id]]=!!document.getElementById(id).checked; });
+    t.uphill=parseInt(document.getElementById('tuneUphill').value,10)||0; return t;
   }
-  Object.keys(tuneMap).forEach(function(id){
-    document.getElementById(id).onchange=function(){ tune[tuneMap[id]]=this.checked; recompute(); };
-  });
-  document.getElementById('tuneUphill').oninput=function(){ tune.uphill=parseInt(this.value,10)||0; document.getElementById('tuneUphillVal').textContent=tune.uphill; recompute(); };
+  function writeTuneUI(t){
+    t=t||{};
+    Object.keys(tuneMap).forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=!!t[tuneMap[id]]; });
+    var u=document.getElementById('tuneUphill'); if(u){ u.value=t.uphill||0; document.getElementById('tuneUphillVal').textContent=t.uphill||0; }
+  }
+  function syncTuneUI(){ writeTuneUI(tune); }
+  // Bei aktiver Auswahl wirkt das Tuning nur auf den Abschnitt, sonst global.
+  function tuneChanged(){
+    if(selectionIndices().length>=2){ applyTuneToSelection(); }
+    else { tune=readTuneUI(); recompute(); }
+  }
+  Object.keys(tuneMap).forEach(function(id){ document.getElementById(id).onchange=tuneChanged; });
+  document.getElementById('tuneUphill').oninput=function(){ document.getElementById('tuneUphillVal').textContent=this.value; tuneChanged(); };
 
   /* ---- Rundweg ---- */
   document.getElementById('rtPts').oninput=function(){ document.getElementById('rtPtsVal').textContent=this.value; };
