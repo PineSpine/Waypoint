@@ -13,6 +13,9 @@ Troubleshooting/
 # Claude Code: lokale, maschinenspezifische Einstellungen
 .claude/settings.local.json
 
+# Session-Handoff: Momentaufnahme, veraltet schnell (CLAUDE.md ist die gepflegte Gedächtnisdatei)
+handoff.md
+
 # Windows
 Thumbs.db
 desktop.ini
