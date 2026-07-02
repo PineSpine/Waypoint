@@ -2,7 +2,7 @@
    Cacht die App-Shell (HTML, Icon, Manifest, Leaflet, Fonts) → Start auch offline.
    Kartenkacheln und Routing-/POI-APIs bleiben bewusst Netzwerk (zu groß bzw. dynamisch);
    ohne Netz zeigt die App das an, statt eine leere Karte vorzutäuschen. */
-const VERSION = 'waypoint-v1';
+const VERSION = 'waypoint-v2';
 const CORE = [
   'kartentisch.html',
   'manifest.webmanifest',
