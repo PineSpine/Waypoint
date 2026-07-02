@@ -19,7 +19,7 @@
 ## Die App
 - **Eine einzige, selbst-enthaltene HTML-Datei:** `kartentisch.html`. Kein Build-Step.
 - **Responsive (Desktop + Mobile in EINER Datei):** Media-Queries `@media (max-width:640px)` +
-  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet** (max. 40vh, per Wischen
+  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet** (max. 45vh, per Wischen
   am Kopf auf-/zuziehen — hoch=auf, runter=zu, Tipp=umschalten; kein +/-Button), Toolbar =
   horizontale, eingerückte Wisch-Leiste oben (Scroll-Fade rechts). **Long-Press auf Toolbar-Icons**
   zeigt die Beschriftung (`#tbTip`, Touch-Ersatz fürs Hover; unterdrückt die Aktion bei langem Halten).
