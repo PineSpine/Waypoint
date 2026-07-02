@@ -581,7 +581,7 @@
     <button class="tb-btn" id="tLock" title="Gewählten Abschnitt sperren (wird nicht neu berechnet, bleibt beim Neuladen erhalten)"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
     <button class="tb-btn" id="tSave" title="Routendaten speichern (wird beim nächsten Öffnen geladen)"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 13h8v6H8z"/></svg></button>
     <button class="tb-btn" id="tClear" title="Routendaten löschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg></button>
-    <button class="tb-btn" id="tPreset" title="Auf Ausgangs-Preset zurücksetzen (verwirft Planung & gespeicherten Stand)"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3.5V8h-4.5"/></svg></button>
+    <button class="tb-btn" id="tPreset" title="Alles zurücksetzen / leer neu beginnen (verwirft Planung & gespeicherten Stand)"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3.5V8h-4.5"/></svg></button>
     <button class="tb-btn" id="tGradient" title="Steigungscodierung"><svg viewBox="0 0 24 24"><path d="M3 19l6-9 4 5 3-4 5 8z"/></svg></button>
     <button class="tb-btn" id="tUndo" title="Letzte Aktion rückgängig machen"><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 5 5v1"/></svg></button>
     <div class="tb-sep"></div>
@@ -1738,10 +1738,9 @@
       backfillLockAnalysis();                     // fehlende Analyse-Daten importierter Locks nachladen
     } else setStatus('Import fehlgeschlagen.','err');
   }
-  /* Einmaliger Reset auf das Ausgangs-Preset: gespeicherten Stand löschen, alles leeren,
-     Ansicht/Profil auf Standard, dann PRESET laden. */
+  /* Kompletter Reset: gespeicherten Stand löschen, alles leeren, Ansicht/Profil auf Standard → leerer Start. */
   function resetToPreset(){
-    if(!confirm('Aktuelle Planung verwerfen und das Ausgangs-Preset (19 Wegpunkte) laden?\nEin gespeicherter Stand wird dabei gelöscht.')) return;
+    if(!confirm('Aktuelle Planung verwerfen und leer neu beginnen?\nEin gespeicherter Stand wird dabei gelöscht.')) return;
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     clearAll();
     var sel=document.getElementById('profile'); sel.value='brouter|trekking'; globalProfileValue=sel.value; updateProfileAuxFields();
@@ -1750,8 +1749,8 @@
     if(document.getElementById('lyrTopo').checked){ document.getElementById('lyrTopo').checked=false; map.removeLayer(topo); map.addLayer(osm); }
     if(map.hasLayer(cycle)) map.removeLayer(cycle);
     document.getElementById('lyrCycle').checked=false;
-    loadPreset();
-    setStatus('Auf Ausgangs-Preset zurückgesetzt · 19 Stützpunkte. Gespeicherter Stand gelöscht.');
+    map.setView([50.6,10.4],7);   // zurück auf die Deutschland-Übersicht
+    setStatus('Zurückgesetzt — leerer Start. Gespeicherter Stand gelöscht.');
   }
 
   /* ---------------- Wire up UI ---------------- */
@@ -2008,37 +2007,14 @@
   window.addEventListener('drop',function(e){ e.preventDefault(); dz.classList.remove('show');
     var f=e.dataTransfer.files[0]; if(f){ var rd=new FileReader(); rd.onload=function(){ loadGpxText(rd.result); }; rd.readAsText(f); } });
 
-  /* ---------------- Preset: Etappen-Entwurf v2 · entlang der Fernradwege ---------------- */
-  var PRESET=[
-    {name:'Hannover · Start — Leine-Heide-Radweg',        lat:52.3759, lng:9.7320},
-    {name:'Northeim — Leine-Heide-Radweg',                lat:51.7060, lng:10.0010},
-    {name:'Göttingen — Leine-Heide-Radweg',               lat:51.5413, lng:9.9158},
-    {name:'Heiligenstadt · Eichsfeld — Leine→Unstrut',    lat:51.3779, lng:10.1392},
-    {name:'Erfurt — Thüringer Städtekette',               lat:50.9787, lng:11.0328},
-    {name:'Weimar · Ruhetag — Ilmtal-Radweg',             lat:50.9795, lng:11.3290},
-    {name:'Rudolstadt — Saale-Radweg (aufwärts)',         lat:50.7206, lng:11.3400},
-    {name:'Saalfeld — Saale-Radweg',                      lat:50.6486, lng:11.3625},
-    {name:'Lichtenfels — Frankenwald-Querung → Main',     lat:50.1450, lng:11.0610},
-    {name:'Bamberg — Main-Radweg',                        lat:49.8988, lng:10.9028},
-    {name:'Erlangen — Regnitz-Radweg',                    lat:49.5896, lng:11.0078},
-    {name:'Eichstätt · Altmühltal-Radweg',                lat:48.8908, lng:11.1844},
-    {name:'Kelheim — Altmühl → Donau-Radweg',             lat:48.9170, lng:11.8740},
-    {name:'Regensburg — Donau-Radweg',                    lat:49.0134, lng:12.1016},
-    {name:'Landshut — Isar/Niederbayern',                 lat:48.5450, lng:12.1620},
-    {name:'Mühldorf am Inn',                              lat:48.2480, lng:12.5240},
-    {name:'Burghausen — Salzhandelsweg',                  lat:48.1697, lng:12.8306},
-    {name:'Bad Reichenhall — Saalachtal/Salzhandelsweg',  lat:47.7290, lng:12.8780},
-    {name:'Berchtesgaden · Ziel',                         lat:47.6303, lng:12.9968}
-  ];
-  function loadPreset(){
-    PRESET.forEach(function(p){ addWaypoint(p.lat,p.lng,true,p.name); });
+  /* ---------------- Start: leer (kein Preset — jede/r beginnt blank) ---------------- */
+  function startBlank(){
     document.getElementById('lyrCycle').checked=false;   // Fernradwege-Overlay standardmäßig aus
-    map.fitBounds(L.latLngBounds(PRESET.map(function(p){return [p.lat,p.lng];})),{padding:[55,55]});
-    recompute();
-    setStatus('Entwurf v2 geladen · 19 Stützpunkte auf den Fernradwegen. Fernradwege-Overlay über „Ebenen" zuschaltbar.');
+    updateStats();
+    setStatus('Willkommen bei Waypoint. Aktiviere in der Toolleiste „Route zeichnen" und klicke auf die Karte, um Wegpunkte zu setzen — oder lade einen gespeicherten Stand über „Geräte-Sync".');
   }
-  // Gespeicherten Stand bevorzugt laden; sonst den 19-Wegpunkte-Entwurf als Start.
-  if(!loadState()) loadPreset();
+  // Gespeicherten Stand bevorzugt laden; sonst leer starten.
+  if(!loadState()) startBlank();
   // Einmalig fehlende Analyse-Daten für „alte" gesperrte Abschnitte nachladen (Geometrie bleibt fix).
   backfillLockAnalysis();
 

@@ -40,7 +40,7 @@
 - **Persistenz via `localStorage`** (Key `waypoint_route_v1`): expliziter Speichern-Button
   (`saveState`) sichert Wegpunkte inkl. `legProfile`+`lock`, globales Profil, Nogos, POIs, Ebenen,
   Steigungsmodus, `tune` und Kartenausschnitt; beim Start lädt `loadState()` diesen Stand bevorzugt,
-  sonst das PRESET. Serialisierung zentral in `buildStateObject()`/`applyStateObject()` (von
+  sonst **leerer Start** (`startBlank`). Serialisierung zentral in `buildStateObject()`/`applyStateObject()` (von
   Save/Load **und** Datei-Export/Import geteilt → Format kann nie divergieren).
   **Beim Laden immer `fitBounds` auf die ganze Route** (≈ ganz Deutschland), der gespeicherte Zoom
   wird bewusst ignoriert. Bei `file://` kann der Browser localStorage sperren → sichtbarer Fehlerstatus.
@@ -50,7 +50,10 @@
   gehen dabei `legProfile`/`lock`/`tune` NICHT verloren.
 - **Stil: „Liquid Glass"** — frostige, transluzente Panels, `backdrop-filter` blur+saturate,
   Blau/Weiß-Palette. Akzent `#0a84ff` / `#0060df`, Routenlinie `#1f6fff`.
-- **19-Wegpunkte-Preset** des Gesamtkorridors ist im JS am Dateiende eingebettet (`PRESET`).
+- **Kein Preset — die App startet blank** (für fremde Besucher der Live-Seite). `startBlank()` zeigt
+  nur einen Willkommens-Hinweis; das frühere 19-Wegpunkte-Array (`PRESET`/`loadPreset`) wurde entfernt
+  (steckt bei Bedarf noch in der Git-Historie). Der Toolbar-Button „Zurücksetzen" (`resetToPreset`,
+  Name beibehalten) leert jetzt alles auf leeren Start statt ein Preset zu laden.
 - Funktionen: Klick-Wegpunkte (ziehbar), debounctes Re-Routing, Etappen-Marker alle X km,
   Overpass-Loader (Camping/Supermarkt/Wasser/Radladen mit Google-Maps-Links),
   GPX-Import (Drag&Drop) + GPX-Export, Steigungscodierung, No-Go-Kreise, POIs, Bewegungsradius.
@@ -124,7 +127,7 @@
   Zoom In · Zoom Out · Standort · Suche · | · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · POI ·
   | · Route zeichnen · Wegpunkt einfügen · Route umkehren · Abschnitts-Profil ·
   letzten Punkt löschen · Abschnitt sperren · Routendaten speichern · Routendaten löschen ·
-  Auf Preset zurücksetzen · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  Zurücksetzen (leer neu beginnen) · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
   (Karten-Annotationen oben gruppiert, alle Routing-/Routendaten-Funktionen darunter.)
 - Hauptpanel, Toolleiste **und** Streckenanalyse-Register: alle **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
