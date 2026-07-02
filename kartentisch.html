@@ -1,5 +1,13 @@
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a84ff" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Waypoint" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <title>Waypoint</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -50,15 +58,15 @@
   #panel::before{content:"";position:absolute;top:0;left:0;right:0;height:46%;pointer-events:none;
     background:linear-gradient(180deg,rgba(255,255,255,.5),transparent);mix-blend-mode:screen}
 
-  .head{position:relative;padding:17px 19px 15px;
+  .head{position:relative;flex:0 0 auto;padding:17px 19px 15px;
     background:linear-gradient(150deg,rgba(255,255,255,.42),rgba(160,205,255,.32));
     border-bottom:1px solid var(--edge-soft);overflow:hidden}
   .head::after{content:"";position:absolute;top:-60%;left:-20%;width:80%;height:200%;pointer-events:none;
     background:linear-gradient(75deg,transparent,rgba(255,255,255,.55),transparent);
     transform:rotate(8deg);filter:blur(6px)}
-  .kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+  .kicker{position:relative;z-index:2;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
     color:var(--accent-deep);opacity:.85;margin:0 0 5px}
-  .title{font-family:'Onest',sans-serif;font-weight:700;font-size:25px;line-height:1.02;margin:0;
+  .title{position:relative;z-index:2;font-family:'Onest',sans-serif;font-weight:700;font-size:25px;line-height:1.02;margin:0;
     letter-spacing:-.01em;color:#11202c}
   .route-line{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.02em;margin-top:8px;color:var(--ink-soft)}
   .toggle{position:absolute;top:15px;right:15px;cursor:pointer;border:1px solid var(--edge);border-radius:11px;
@@ -66,7 +74,7 @@
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:.15s}
   .toggle:hover{background:rgba(255,255,255,.8)}
 
-  .body{padding:15px 17px 19px;overflow-y:auto}
+  .body{flex:1 1 auto;min-height:0;padding:15px 17px 19px;overflow-y:auto}
   /* Liquid-Glass-Scrollbar (Hauptpanel) — Webkit/Chromium/Vivaldi.
      KEINE scrollbar-width/scrollbar-color setzen: das würde in Chromium die
      ::-webkit-scrollbar-Gestaltung deaktivieren. */
@@ -162,6 +170,22 @@
   .stat .v{font-family:'DM Mono',monospace;font-weight:500;font-size:21px;color:var(--accent-deep);line-height:1}
   .stat .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:5px}
 
+  /* Streckenanalyse (Weg · Material · Beschaffenheit) */
+  .an-grp{margin-bottom:11px} .an-grp:last-child{margin-bottom:0}
+  .an-h{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 5px}
+  .an-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 9px;margin-bottom:3px;
+    border:1px solid var(--edge);border-radius:9px;background:var(--glass-tile);font-size:12px;cursor:default;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:.12s}
+  .an-row:hover{background:#fff;box-shadow:0 3px 10px rgba(16,38,70,.16)}
+  .an-cat{display:flex;align-items:center;gap:7px;min-width:0}
+  .an-sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+  .an-lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .an-km{font-family:'DM Mono',monospace;color:var(--accent-deep);flex:0 0 auto}
+  .an-row.an-total{background:transparent;border:none;border-top:1px solid var(--edge-soft);border-radius:0;
+    margin-top:2px;font-weight:600;cursor:default}
+  .an-row.an-total:hover{background:transparent;box-shadow:none}
+
   .hint{font-size:11.5px;line-height:1.5;color:var(--ink-soft);
     background:linear-gradient(160deg,rgba(214,236,255,.6),rgba(255,255,255,.35));
     border:1px solid var(--edge);border-radius:13px;padding:9px 11px;margin-top:2px;
@@ -233,6 +257,42 @@
     color:var(--ink-soft)}
   #legend .row{display:flex;align-items:center;gap:8px;margin:5px 0;color:var(--ink-soft)}
   #legend .ch{width:18px;height:0;border-top-width:3px;border-top-style:solid;flex:0 0 auto;border-radius:3px}
+  /* Maßstab (Leaflet) — glasig, links neben der Legende (die ~214px breit rechts unten sitzt) */
+  .leaflet-control-scale{margin:0 246px 20px 0!important}
+  .leaflet-control-scale-line{background:rgba(255,255,255,.6)!important;-webkit-backdrop-filter:blur(10px) saturate(180%);
+    backdrop-filter:blur(10px) saturate(180%);border:1px solid var(--edge)!important;border-top:none!important;
+    color:var(--ink)!important;font-family:'DM Mono',monospace;font-size:10px;line-height:1.5;padding:1px 6px;
+    box-shadow:0 4px 12px var(--shadow),inset 0 1px 0 rgba(255,255,255,.7)}
+  .leaflet-control-scale-line:first-child{border-radius:0 0 4px 0}
+  .leaflet-control-scale-line:not(:first-child){border-top:1px solid var(--edge)!important;margin-top:-1px;border-radius:0 0 6px 6px}
+
+  /* ---------- Streckenanalyse-Register (rechts, verschiebbar + einklappbar) ---------- */
+  #analysisPanel{position:absolute;z-index:1000;top:16px;right:16px;width:266px;max-height:calc(100% - 32px);
+    display:flex;flex-direction:column;border-radius:22px;overflow:hidden;background:var(--glass);
+    -webkit-backdrop-filter:blur(34px) saturate(190%);backdrop-filter:blur(34px) saturate(190%);
+    border:1px solid var(--edge);box-shadow:0 20px 60px var(--shadow),inset 0 1px 0 rgba(255,255,255,.85);
+    animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+  #analysisPanel.hidden{display:none}
+  #analysisPanel.min{width:auto}
+  #analysisPanel.min .ap-body{display:none}
+  .ap-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;
+    cursor:grab;background:linear-gradient(150deg,rgba(255,255,255,.42),rgba(160,205,255,.30));
+    border-bottom:1px solid var(--edge-soft)}
+  .ap-head:active{cursor:grabbing}
+  .ap-title{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent-deep);font-weight:500;white-space:nowrap}
+  .ap-title svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+  .ap-collapse{flex:0 0 auto;border:1px solid var(--edge);background:rgba(255,255,255,.45);border-radius:9px;
+    width:26px;height:26px;cursor:pointer;color:var(--ink);font-size:16px;line-height:1;padding:0;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .ap-collapse:hover{background:rgba(255,255,255,.8)}
+  .ap-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 13px}
+  .ap-body::-webkit-scrollbar{width:11px}
+  .ap-body::-webkit-scrollbar-track{background:transparent;margin:6px 0}
+  .ap-body::-webkit-scrollbar-thumb{border:2px solid transparent;background-clip:padding-box;border-radius:12px;
+    background-image:linear-gradient(180deg,rgba(255,255,255,.92),rgba(125,188,255,.74));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.98),inset 0 0 0 1px rgba(255,255,255,.6)}
+  .an-cov{font-size:11px;line-height:1.45;color:var(--ink-soft);margin-top:4px}
   /* ---------- BRouter-Stil-Toolleiste (Glas) ---------- */
   #panel{left:86px}
   .head{cursor:grab} .head:active{cursor:grabbing}
@@ -267,8 +327,77 @@
   .nogo-pin{background:#c62828;color:#fff}
   .poi-pin{background:#7a4ad0;color:#fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
   .poi-pin span{transform:rotate(45deg)}
-  @media(max-width:640px){
-    #panel{width:calc(100% - 32px);left:16px;top:80px} #legend{display:none}
+  /* ============================================================
+     MOBILE / TOUCH — responsives Layout (eine Datei, Desktop unberührt)
+     ============================================================ */
+
+  /* Fingerfreundliche Tap-Ziele auf jedem Touch-Gerät (Phone + Tablet).
+     Inputs auf 16px, damit iOS beim Fokus nicht hineinzoomt. */
+  @media (pointer:coarse){
+    .tb-btn{width:44px;height:44px}
+    .tb-btn svg{width:21px;height:21px}
+    .btn{padding:12px 12px}
+    select,input[type=number],input[type=text]{font-size:16px;padding:11px 12px}
+    .sw{width:46px;height:27px}
+    .sw .kn{width:20px;height:20px}
+    .sw input:checked ~ .kn{transform:translateX(19px)}
+    .toggle{width:38px;height:38px}
+  }
+
+  /* ---------- Phone (≤640px): Panel als Bottom-Sheet, Toolbar horizontal oben ---------- */
+  @media (max-width:640px){
+    #legend{display:none}
+
+    /* Hauptpanel = Bottom-Sheet, fest unten angedockt, max. halbe Höhe
+       (damit die Karte beim Bedienen sichtbar bleibt).
+       (!important schlägt die Inline-Styles des Desktop-Drags) */
+    #panel{
+      left:0!important; right:0!important; bottom:0!important; top:auto!important;
+      width:100%!important; max-width:100%!important;
+      max-height:50vh; border-radius:24px 24px 0 0;
+      padding-bottom:env(safe-area-inset-bottom);
+      animation:none;   /* keine transform-Einblendung → Ruheposition hängt nie an einer Animation */
+    }
+    /* Griff-Bar am oberen Sheet-Rand — zugleich die Wisch-Fläche */
+    #panel .head{padding-top:24px;cursor:default;touch-action:none}
+    #panel .head::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);
+      width:46px;height:5px;border-radius:3px;background:rgba(90,110,130,.5);z-index:3}
+    #panel.min{width:100%!important}
+    #panel.min .body{display:none}
+    #panel .toggle{display:none}           /* +/- weg — Auf-/Zuziehen per Wischen */
+
+    /* Toolbar = eingerückte, horizontal scrollbare Glas-Leiste (Rundungen sichtbar,
+       Icons bleiben durch overflow:hidden sauber innerhalb der Leiste) */
+    #toolbar{
+      left:9px!important; right:9px!important; top:calc(env(safe-area-inset-top) + 9px)!important;
+      bottom:auto!important; width:auto!important; border-radius:16px; padding-top:0;
+    }
+    /* Scroll-Hinweis: dezenter Verlauf am rechten Rand → „hier geht's weiter" */
+    #toolbar::after{content:"";position:absolute;top:0;right:0;bottom:0;width:26px;pointer-events:none;z-index:2;
+      border-radius:0 16px 16px 0;background:linear-gradient(90deg,rgba(236,245,255,0),rgba(236,245,255,.7))}
+    .tb-head{display:none}                 /* auf dem Phone fest: kein Grip/Collapse */
+    .tb-body{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;
+      gap:9px;padding:8px 10px;-webkit-overflow-scrolling:touch;align-items:center;
+      scrollbar-width:none}
+    .tb-body::-webkit-scrollbar{display:none}
+    .tb-btn{width:44px;height:44px;flex:0 0 auto}
+    .tb-btn svg{width:21px;height:21px}
+    .tb-sep{width:1px;height:26px;flex:0 0 auto;margin:0 2px}
+    /* Transparenz-Regler horizontal statt vertikal */
+    .tb-slider-wrap{height:auto;width:120px;flex:0 0 auto;padding:0 8px}
+    #tOpacity{-webkit-appearance:auto;appearance:auto;writing-mode:horizontal-tb;direction:ltr;
+      width:104px;height:auto}
+
+    /* Routing-Bereich mobil aufräumen: keine gequetschten Zweizeiler */
+    #profile{line-height:1.35;padding-top:12px;padding-bottom:12px}
+    details.hint-acc>summary{align-items:flex-start;line-height:1.5;padding:11px 12px;font-size:11.5px}
+    details.hint-acc>summary::before{margin-top:3px;flex:0 0 auto}
+    label.fld{font-size:12.5px;margin-bottom:6px}
+    /* Maßstab: Legende ist mobil aus → an den rechten Rand, über den eingeklappten Sheet-Kopf */
+    .leaflet-control-scale{margin:0 12px 96px 0!important}
+    /* Analyse-Register: unter die Top-Toolbar, rechts, schmaler */
+    #analysisPanel{top:calc(env(safe-area-inset-top) + 74px)!important;right:9px!important;left:auto!important;
+      width:min(74vw,252px);max-height:56vh}
   }
 
 </style>
@@ -280,7 +409,7 @@
 <div id="panel">
   <div class="head">
     <h1 class="title">Waypoint</h1>
-    <p class="kicker" style="margin:7px 0 0">Bikepacking-Router</p>
+    <p class="kicker" style="margin:7px 0 0">Bike Routing Engine</p>
     <button class="toggle" id="minBtn" title="Panel ein-/ausklappen">–</button>
   </div>
 
@@ -292,6 +421,7 @@
         <div class="stat"><div class="v" id="sAsc">0</div><div class="k">Höhenmeter</div></div>
         <div class="stat"><div class="v" id="sWp">0</div><div class="k">Wegpunkte</div></div>
         <div class="stat"><div class="v" id="sStage">0</div><div class="k">Etappen ≈</div></div>
+        <div class="stat" style="grid-column:1/-1"><div class="v" id="sTime">–</div><div class="k">Reisezeit ≈ (BRouter-Schätzung)</div></div>
       </div>
       <div id="status">Bereit. Klicke auf die Karte zum Setzen von Wegpunkten.</div>
     </div>
@@ -326,7 +456,7 @@
         </div>
       </details>
       <details class="hint-acc" style="margin-top:7px">
-        <summary>Feinabstimmung — Profil tunen (BRouter Trekking/Schnell)</summary>
+        <summary>Feinabstimmung — Profil tunen</summary>
         <div style="margin-top:6px">
           <div class="hint" id="tuneScope" style="margin:0 0 8px">Wirkt global (kein Abschnitt gewählt).</div>
           <div class="tog"><span>🌳 Grün / Wald bevorzugen</span>
@@ -341,6 +471,20 @@
             <label class="sw"><input type="checkbox" id="tuneRiver"><span class="tr"></span><span class="kn"></span></label></div>
           <div class="tog"><span>🏙️ Städte / große Orte umfahren</span>
             <label class="sw"><input type="checkbox" id="tuneTown"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>📉 Wenig Höhenmeter bevorzugen</span>
+            <label class="sw"><input type="checkbox" id="tuneElevation"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🚗 Verkehrsaufkommen berücksichtigen</span>
+            <label class="sw"><input type="checkbox" id="tuneTraffic"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🚷 Radrouten nicht extra bevorzugen</span>
+            <label class="sw"><input type="checkbox" id="tuneIgnoreCr"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🧭 Auch geplante Radrouten nutzen</span>
+            <label class="sw"><input type="checkbox" id="tuneProposedCr"><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>🪜 Treppen / Stufen erlauben</span>
+            <label class="sw"><input type="checkbox" id="tuneSteps" checked><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>⛴️ Fähren erlauben</span>
+            <label class="sw"><input type="checkbox" id="tuneFerries" checked><span class="tr"></span><span class="kn"></span></label></div>
+          <div class="tog"><span>📏 Luftlinie bei weit entfernten Punkten</span>
+            <label class="sw"><input type="checkbox" id="tuneBeeline"><span class="tr"></span><span class="kn"></span></label></div>
           <label class="fld" style="margin-top:9px">⛰️ Steigungen meiden: <b id="tuneUphillVal">0</b> / 10</label>
           <input type="range" id="tuneUphill" min="0" max="10" value="0" step="1" style="width:100%;accent-color:var(--accent)" />
           <div class="hint" style="margin-top:7px">Feintuning des BRouter-Trekking/Schnell-Profils (per Profil-Parameter, ohne Upload/Key). Gilt nicht für GraphHopper. Für <b>unbefestigte Wege</b>: oben die Engine „Gravel" wählen.</div>
@@ -397,6 +541,14 @@
       <input type="file" id="gpxFile" accept=".gpx,application/gpx+xml" style="display:none" />
     </div>
 
+    <div class="sec">
+      <div class="sec-h">Geräte-Sync</div>
+      <button class="btn" id="stateExportBtn"><span class="ic">📤</span>Zustand exportieren (Datei)</button>
+      <button class="btn" id="stateImportBtn"><span class="ic">📥</span>Zustand importieren (Datei)</button>
+      <input type="file" id="stateFile" accept=".json,.wproute,application/json" style="display:none" />
+      <div class="hint">Überträgt den <b>kompletten</b> Planungs-Stand (Wegpunkte, Abschnitts-Profile, Feintuning, gesperrte Abschnitte, No-Gos, POIs) zwischen Desktop und Handy. Exportieren → Datei per Mail/Cloud/USB aufs andere Gerät → dort importieren. Anders als GPX geht dabei <b>nichts</b> verloren.</div>
+    </div>
+
   </div>
 </div>
 
@@ -434,6 +586,17 @@
 </div>
 
 
+<div id="analysisPanel" class="hidden min">
+  <div class="ap-head" id="apGrip" title="Register verschieben">
+    <span class="ap-title">
+      <svg viewBox="0 0 24 24"><path d="M4 20V6M4 20h16M8 20v-6M13 20V9M18 20v-9"/></svg>
+      Streckenanalyse
+    </span>
+    <button class="ap-collapse" id="apCollapse" title="Ein-/ausklappen">+</button>
+  </div>
+  <div class="ap-body" id="analysisBox"></div>
+</div>
+
 <div id="legend">
   <h4>Legende</h4>
   <div class="row"><span class="ch" style="border-top-color:#1f6fff"></span> Geplante Route</div>
@@ -454,12 +617,19 @@
   map.createPane('cycleTop');
   map.getPane('cycleTop').style.zIndex = 450;
   map.getPane('cycleTop').style.pointerEvents = 'none';
+  // Analyse-Highlight über der Routenlinie (overlayPane 400), unter dem Radnetz (450)
+  map.createPane('hlPane');
+  map.getPane('hlPane').style.zIndex = 445;
+  map.getPane('hlPane').style.pointerEvents = 'none';
   var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
   var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
     maxZoom:17, subdomains:'abc', attribution:'© OpenTopoMap (CC-BY-SA)'});
   var cycle = L.tileLayer('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',{
     maxZoom:18, opacity:.85, pane:'cycleTop', attribution:'Radrouten © waymarkedtrails.org'});
+
+  // Dynamischer Maßstab (Leaflet-Bordmittel), rechts unten links neben der Legende.
+  L.control.scale({position:'bottomright', metric:true, imperial:true, maxWidth:130, updateWhenIdle:false}).addTo(map);
 
   /* ---------------- State ---------------- */
   var waypoints = [];          // {lat,lng,marker}
@@ -468,7 +638,9 @@
   var stageMarkers=[], poiMarkers=[], gpxLayer=null;
   var campMarkers=[], supplyMarkers=[];   // getrennt verwaltet, damit jede Kategorie einzeln ein-/ausblendbar ist
   var undoStack=[];                        // Schnappschüsse der Wegpunktliste für „rückgängig"
-  var routeDist=0, routeAsc=0;
+  var routeDist=0, routeAsc=0, routeTime=0;
+  var routeMessages=[];            // [{lat,lng,dist,tags}] für die Streckenanalyse (BRouter)
+  var analysisHL=L.layerGroup().addTo(map);   // Hover-Highlight-Ebene der Analyse
   var routeSeq=0;                  // „neueste Anfrage gewinnt": stale async-Ergebnisse verwerfen
   var mode='none';                 // draw | nogo | radius | poi | none — Start: Karte frei beweglich
   var nogos=[];                    // {lat,lng,radius,circle}
@@ -476,8 +648,11 @@
   var radiusCircle=null, radiusKm=15;
   var routeOpacity=1, gradientMode=false, gradientLayer=null;
   var ghProfileCache={};
-  // Feinabstimmung des BRouter-Trekking/Schnell-Profils (per &profile:<name>= an die Anfrage)
-  var tune={forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0};
+  // Feinabstimmung des BRouter-Trekking/Schnell-Profils (per &profile:<name>= an die Anfrage).
+  // Standardwerte spiegeln die Profil-Defaults: steps/ferries/elevation sind AN, der Rest AUS.
+  function defaultTune(){ return {forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0,
+    steps:true,ferries:true,elevation:false,ignorecr:false,proposedcr:false,beeline:false,traffic:false}; }
+  var tune=defaultTune();
   var rtSeed=0;                    // Rundweg-Richtungs-Seed
 
   var statusEl=document.getElementById('status');
@@ -656,7 +831,7 @@
     var sel=selectionIndices(), scope=document.getElementById('tuneScope');
     if(sel.length>=2){
       var ov=waypoints[sel[0]].legProfile;
-      writeTuneUI(ov&&ov.tune ? ov.tune : {forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0});
+      writeTuneUI(ov&&ov.tune ? ov.tune : defaultTune());
       if(scope){ scope.textContent='Wirkt nur auf Abschnitt WP'+(sel[0]+1)+'–WP'+(sel[sel.length-1]+1)+'.'; scope.style.display=''; }
     } else {
       writeTuneUI(tune);
@@ -692,7 +867,8 @@
       var eng=waypoints[k].legProfile||globalEng;
       seq=seq.then(function(){
         return routeRun([waypoints[k],waypoints[k+1]], eng).then(function(res){
-          waypoints[k].lock={coords:res.coords.map(roundCoord), dist:res.dist, asc:res.asc}; done++;
+          waypoints[k].lock={coords:res.coords.map(roundCoord), dist:res.dist, asc:res.asc,
+            an: res.msgs ? compactAnSegs(res.msgs) : null}; done++;   // Analyse-Daten mitfixieren
         }).catch(function(){ failed++; });
       });
     };
@@ -705,6 +881,37 @@
   }
   function unlockSection(a,b){ snapshot(); for(var k=a;k<b;k++) delete waypoints[k].lock; recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Abschnitt entsperrt — wird wieder normal geroutet.'); }
   function clearAllLocks(){ if(!hasLocks())return; snapshot(); waypoints.forEach(function(w){ delete w.lock; }); recompute(); reindexWaypoints(); updateSegPanel(); saveState(true); setStatus('Alle Sperren aufgehoben.'); }
+  /* Einmalige Nachrüstung: gesperrte Beine, die noch KEINE Analyse-Daten haben (vor diesem
+     Feature angelegt), werden je einmal geroutet — NUR um die Wegtyp-Tags zu holen. Die neue
+     Geometrie wird komplett verworfen; ausschließlich lock.an wird gesetzt. coords/dist/asc und
+     damit die gezeichnete Route bleiben byte-identisch. GraphHopper-Beine liefern keine Tags → bleiben offen. */
+  function backfillLockAnalysis(){
+    if(!hasLocks()) return;
+    var globalEng=currentEngine(); globalEng.tune=tune;
+    var todo=[];
+    for(var k=0;k<waypoints.length-1;k++){
+      var w=waypoints[k];
+      if(w.lock && !(w.lock.an && w.lock.an.length)) todo.push({k:k, eng:w.legProfile||globalEng});
+    }
+    if(!todo.length) return;
+    setStatus('Analyse für '+todo.length+' gesperrte(n) Abschnitt(e) wird einmalig nachgeladen (Geometrie bleibt fix) …','busy');
+    var seq=Promise.resolve(), got=0;
+    todo.forEach(function(item){
+      seq=seq.then(function(){
+        if(!waypoints[item.k] || !waypoints[item.k].lock) return;   // Lock inzwischen entfernt
+        return routeRun([waypoints[item.k],waypoints[item.k+1]], item.eng).then(function(res){
+          if(res && res.msgs && waypoints[item.k] && waypoints[item.k].lock){
+            waypoints[item.k].lock.an=compactAnSegs(res.msgs);       // NUR Analyse — Geometrie unangetastet
+            got++;
+          }
+        }).catch(function(){});                                       // Fehlschlag → bleibt offen, nächster Load versucht es erneut
+      });
+    });
+    seq.then(function(){
+      if(got){ saveState(true); recompute();                         // recompute rebaut die Analyse inkl. der neuen Lock-Daten
+        setStatus('Analyse für '+got+' gesperrte(n) Abschnitt(e) ergänzt & gespeichert — Geometrie unverändert.'); }
+    });
+  }
   /* Route umkehren: Leg-Eigenschaften (legProfile/lock) hängen am START-Wegpunkt eines Beins.
      Ein blankes waypoints.reverse() trägt sie mit dem physischen Wegpunkt mit → das Bein-Attribut
      rutscht um ein Bein. Darum: Bein-Attribute nach Bein-Index einsammeln, Array umkehren, dann
@@ -843,7 +1050,116 @@
   function updateStats(){
     document.getElementById('sDist').textContent=(routeDist/1000).toFixed(1);
     document.getElementById('sAsc').textContent=Math.round(routeAsc);
+    document.getElementById('sTime').textContent=fmtDuration(routeTime);
   }
+  function fmtDuration(sec){
+    sec=Math.round(sec||0); if(sec<=0) return '–';
+    var h=Math.floor(sec/3600), m=Math.round((sec%3600)/60);
+    if(m===60){ h++; m=0; }
+    return h>0 ? (h+' h '+(m<10?'0':'')+m+' min') : (m+' min');
+  }
+
+  /* ---------------- Streckenanalyse (aus BRouter-„messages") ---------------- */
+  function parseWayTags(s){
+    var t={}; (s||'').split(' ').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) t[kv.slice(0,i)]=kv.slice(i+1); });
+    return t;
+  }
+  // BRouter-messages → [{lat,lng,dist,tags}] (ein Eintrag je Segment-Startpunkt)
+  function parseMessages(msgs){
+    if(!Array.isArray(msgs)||msgs.length<2) return [];
+    var h=msgs[0], iLon=h.indexOf('Longitude'), iLat=h.indexOf('Latitude'),
+        iDist=h.indexOf('Distance'), iWay=h.indexOf('WayTags');
+    if(iLon<0||iLat<0||iDist<0||iWay<0) return [];
+    var out=[];
+    for(var r=1;r<msgs.length;r++){ var row=msgs[r];
+      out.push({lat:parseInt(row[iLat],10)/1e6, lng:parseInt(row[iLon],10)/1e6,
+        dist:parseFloat(row[iDist])||0, tags:parseWayTags(row[iWay])}); }
+    return out;
+  }
+  // Kompakte Analyse-Segmente (nur die 4 relevanten Tags, gerundet) — zum Mitspeichern
+  // in gesperrten Beinen, damit die Analyse auch für Locks über Sessions erhalten bleibt.
+  function compactAnSegs(msgs){
+    return parseMessages(msgs).map(function(s){
+      var t={}; ['highway','surface','smoothness','tracktype'].forEach(function(k){ if(s.tags[k]!=null) t[k]=s.tags[k]; });
+      return {lat:+s.lat.toFixed(5), lng:+s.lng.toFixed(5), dist:Math.round(s.dist), tags:t};
+    });
+  }
+  function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+  function catWeg(tags){
+    var hw=tags.highway; if(!hw) return 'Unbekannt';
+    if(hw==='track'){ var m=(tags.tracktype||'').match(/grade([1-5])/); return m?('Track Grade'+m[1]):'Track ungeklärt'; }
+    return cap(hw.replace(/_/g,' '));
+  }
+  function catMaterial(tags){ return tags.surface ? cap(tags.surface.replace(/_/g,' ')) : 'Unbekannt'; }
+  function catBesch(tags){ return tags.smoothness ? cap(tags.smoothness.replace(/_/g,' ')) : 'Unbekannt'; }
+  var DIMS=[{key:'weg',label:'Weg',fn:catWeg},{key:'mat',label:'Material',fn:catMaterial},{key:'bes',label:'Beschaffenheit',fn:catBesch}];
+  // deterministische Farbe je Kategorie (Swatch == Karten-Highlight)
+  function catColor(key){ var h=0; for(var i=0;i<key.length;i++) h=(h*31+key.charCodeAt(i))%360; return 'hsl('+h+',72%,45%)'; }
+  function aggregate(dimFn){
+    var m={}, total=0;
+    routeMessages.forEach(function(seg){ var c=dimFn(seg.tags); m[c]=(m[c]||0)+seg.dist; total+=seg.dist; });
+    var arr=Object.keys(m).map(function(k){return {cat:k,dist:m[k]};}); arr.sort(function(a,b){return b.dist-a.dist;});
+    return {arr:arr, total:total};
+  }
+  function clearAnalysisHL(){ if(analysisHL) analysisHL.clearLayers(); }
+  function highlightCategory(fn,cat,color){
+    clearAnalysisHL();
+    var lines=[], cur=null;
+    for(var i=0;i<routeMessages.length-1;i++){
+      if(fn(routeMessages[i].tags)===cat){
+        if(!cur) cur=[[routeMessages[i].lat,routeMessages[i].lng]];
+        cur.push([routeMessages[i+1].lat,routeMessages[i+1].lng]);
+      } else if(cur){ lines.push(cur); cur=null; }
+    }
+    if(cur) lines.push(cur);
+    lines.forEach(function(l){ L.polyline(l,{color:color,weight:7,opacity:.92,lineCap:'round',lineJoin:'round',pane:'hlPane'}).addTo(analysisHL); });
+  }
+  // Aufgeklappte Höhe des Analyse-Registers so begrenzen, dass es nie hinter die Legende läuft
+  // (endet knapp über deren Oberkante, ab da scrollt der Inhalt). Auf dem Phone regelt das CSS.
+  function fitAnalysisHeight(){
+    var ap=document.getElementById('analysisPanel');
+    if(!ap || ap.classList.contains('hidden') || ap.classList.contains('min')) return;
+    if(window.matchMedia('(max-width:640px)').matches){ ap.style.maxHeight=''; return; }
+    var apTop=ap.getBoundingClientRect().top, lg=document.getElementById('legend'), limit;
+    if(lg && getComputedStyle(lg).display!=='none'){ limit=lg.getBoundingClientRect().top - apTop - 14; }
+    else { limit=window.innerHeight - apTop - 16; }
+    ap.style.maxHeight=Math.max(140, Math.round(limit))+'px';
+  }
+  function buildAnalysis(){
+    var panel=document.getElementById('analysisPanel'), box=document.getElementById('analysisBox');
+    if(!panel||!box) return;
+    clearAnalysisHL();
+    if(!routeMessages.length){ panel.classList.add('hidden'); box.innerHTML=''; return; }
+    var html='';
+    DIMS.forEach(function(dim){
+      var ag=aggregate(dim.fn);
+      html+='<div class="an-grp"><div class="an-h">'+dim.label+'</div>';
+      ag.arr.forEach(function(row){
+        var col=catColor(dim.key+':'+row.cat);
+        html+='<div class="an-row" data-dim="'+dim.key+'" data-cat="'+encodeURIComponent(row.cat)+'">'+
+          '<span class="an-cat"><span class="an-sw" style="background:'+col+'"></span>'+
+          '<span class="an-lbl">'+row.cat+'</span></span>'+
+          '<span class="an-km">'+(row.dist/1000).toFixed(2)+' km</span></div>';
+      });
+      html+='<div class="an-row an-total"><span class="an-lbl">Gesamt bekannt</span>'+
+        '<span class="an-km">'+(ag.total/1000).toFixed(2)+' km</span></div></div>';
+    });
+    var known=0; routeMessages.forEach(function(s){ known+=s.dist; });
+    var uncovered=routeDist-known;
+    if(uncovered>150){ html+='<div class="an-cov">Hinweis: '+(uncovered/1000).toFixed(1)+
+      ' km ohne Wegdaten (gesperrte oder GraphHopper-Abschnitte) sind hier nicht enthalten.</div>'; }
+    box.innerHTML=html;
+    panel.classList.remove('hidden');
+    box.querySelectorAll('.an-row[data-cat]').forEach(function(el){
+      var dim=el.getAttribute('data-dim'), cat=decodeURIComponent(el.getAttribute('data-cat'));
+      var fn=DIMS.filter(function(d){return d.key===dim;})[0].fn;
+      el.addEventListener('mouseenter',function(){ highlightCategory(fn,cat,catColor(dim+':'+cat)); });
+      el.addEventListener('mouseleave',clearAnalysisHL);
+    });
+    fitAnalysisHeight();
+  }
+  // Route-Ergebnis in Analyse/Zeit übernehmen (msgs = rohe BRouter-messages oder null)
+  function setRouteMeta(msgs, timeSec){ routeTime=timeSec||0; routeMessages=parseMessages(msgs); buildAnalysis(); }
 
   function currentEngine(){
     var sel=document.getElementById('profile').value;
@@ -862,7 +1178,11 @@
     return '&nogos='+nogos.map(function(n){return n.lng.toFixed(6)+','+n.lat.toFixed(6)+','+Math.round(n.radius);}).join('|');
   }
   /* Feinabstimmung als BRouter-Profil-Parameter (nur Standard-Trekking/Schnell unterstützen sie) */
-  function tuneActive(t){ return !!t && (t.forest||t.noise||t.avoid||t.cycle||t.river||t.town||t.uphill>0); }
+  // „aktiv" = weicht von den Profil-Defaults ab (steps/ferries/elevation sind per Default AN).
+  function tuneActive(t){ if(!t) return false;
+    return t.forest||t.noise||t.avoid||t.cycle||t.river||t.town||t.uphill>0||
+      t.ignorecr||t.proposedcr||t.beeline||t.traffic||t.elevation||
+      t.steps===false||t.ferries===false; }
   function tuneParam(profile,t){
     t=t||tune;                                       // ohne Abschnitts-Tuning: globales Tuning
     if(profile!=='trekking' && profile!=='fastbike') return '';
@@ -873,6 +1193,14 @@
     if(t.cycle)  p+='&profile:stick_to_cycleroutes=1';
     if(t.river)  p+='&profile:consider_river=1';
     if(t.town)   p+='&profile:consider_town=1';
+    if(t.ignorecr)  p+='&profile:ignore_cycleroutes=1';
+    if(t.proposedcr)p+='&profile:use_proposed_cycleroutes=1';
+    if(t.beeline)   p+='&profile:add_beeline=1';
+    if(t.traffic)   p+='&profile:consider_traffic=1';
+    if(t.elevation) p+='&profile:consider_elevation=1';   // Opt-in: nur wenn aktiv
+    // Default-AN-Schalter: nur senden, wenn abgeschaltet (=0)
+    if(t.steps===false)   p+='&profile:allow_steps=0';
+    if(t.ferries===false) p+='&profile:allow_ferries=0';
     if(t.uphill>0) p+='&profile:uphillcost='+(t.uphill*10);   // Regler 0..10 → uphillcost 0..100
     return p;
   }
@@ -887,17 +1215,19 @@
     var coords=f.geometry.coordinates.map(function(c){return [c[1],c[0],c.length>2?c[2]:undefined];});
     var p=f.properties||{};
     return {coords:coords, dist:parseFloat(p['track-length']||0),
-      asc:parseFloat(p['filtered ascend']||p['filtered_ascend']||0)};
+      asc:parseFloat(p['filtered ascend']||p['filtered_ascend']||0),
+      time:parseFloat(p['total-time']||0), msgs:p.messages||null};
   }
   function applyGeo(geo){
     var r=extractGeo(geo);
     routeDist=r.dist; routeAsc=r.asc;
+    setRouteMeta(r.msgs, r.time);      // Reisezeit + Streckenanalyse
     drawRoute(r.coords,false); updateStats();
   }
   function luftlinie(){
     var coords=waypoints.map(function(w){return [w.lat,w.lng];});
     var d=0; for(var i=1;i<coords.length;i++) d+=haversine(coords[i-1],coords[i]);
-    routeDist=d; routeAsc=0; drawRoute(coords,true); updateStats();
+    routeDist=d; routeAsc=0; setRouteMeta(null,0); drawRoute(coords,true); updateStats();
     setStatus('Kein Router erreichbar — Luftlinie (≈'+(d/1000).toFixed(1)+' km). Karte & GPX-Export funktionieren weiter.','err');
   }
 
@@ -911,11 +1241,11 @@
   function routeGraphHopper(profile){
     var key=((document.getElementById('ghKey').value)||'').trim();
     if(!key){ setStatus('GraphHopper braucht einen kostenlosen API-Key — auf graphhopper.com holen und ins Feld eintragen.','err'); return; }
-    var chunks=ghChunks(waypoints), all=[], dist=0, asc=0;
+    var chunks=ghChunks(waypoints), all=[], dist=0, asc=0, time=0;
     setStatus('GraphHopper · '+profile+' · '+chunks.length+' Segment(e) …','busy');
     (function next(idx){
       if(idx>=chunks.length){
-        routeDist=dist; routeAsc=asc; drawRoute(all,false); updateStats();
+        routeDist=dist; routeAsc=asc; setRouteMeta(null, time/1000); drawRoute(all,false); updateStats();
         setStatus('GraphHopper · '+profile+' · '+(dist/1000).toFixed(1)+' km · '+Math.round(asc)+' Hm ('+chunks.length+' Segm.)');
         return;
       }
@@ -929,7 +1259,7 @@
           var p=res.d.paths[0];
           var cs=p.points.coordinates.map(function(c){return [c[1],c[0],c.length>2?c[2]:undefined];});
           if(idx>0&&cs.length) cs=cs.slice(1);
-          all=all.concat(cs); dist+=p.distance||0; asc+=p.ascend||0;
+          all=all.concat(cs); dist+=p.distance||0; asc+=p.ascend||0; time+=p.time||0;
           next(idx+1);
         })
         .catch(function(e){ setStatus('GraphHopper-Fehler: '+(e.message||e)+' — Key/Profil/Kontingent prüfen.','err'); });
@@ -967,12 +1297,12 @@
   }
 
   /* ---- Segmentiertes Routing (nur aktiv, wenn Abschnitts-Profile gesetzt sind) ---- */
-  function ghRoute(wps, profile, key){           // Promise<{coords,dist,asc}> ohne Zeichnen
+  function ghRoute(wps, profile, key){           // Promise<{coords,dist,asc,time}> ohne Zeichnen
     var chunks=ghChunks(wps);
     return new Promise(function(resolve,reject){
-      var all=[], dist=0, asc=0;
+      var all=[], dist=0, asc=0, time=0;
       (function next(idx){
-        if(idx>=chunks.length){ resolve({coords:all,dist:dist,asc:asc}); return; }
+        if(idx>=chunks.length){ resolve({coords:all,dist:dist,asc:asc,time:time/1000}); return; }
         var pts=chunks[idx].map(function(w){return 'point='+w.lat.toFixed(6)+','+w.lng.toFixed(6);}).join('&');
         var url='https://graphhopper.com/api/1/route?'+pts+'&profile='+encodeURIComponent(profile)+
                 '&points_encoded=false&elevation=true&instructions=false&key='+encodeURIComponent(key);
@@ -982,7 +1312,7 @@
             var p=res.d.paths[0];
             var cs=p.points.coordinates.map(function(c){return [c[1],c[0],c.length>2?c[2]:undefined];});
             if(idx>0&&cs.length) cs=cs.slice(1);
-            all=all.concat(cs); dist+=p.distance||0; asc+=p.ascend||0; next(idx+1);
+            all=all.concat(cs); dist+=p.distance||0; asc+=p.ascend||0; time+=p.time||0; next(idx+1);
           }).catch(reject);
       })(0);
     });
@@ -1027,7 +1357,7 @@
     var results=new Array(runs.length), seq=Promise.resolve();
     runs.forEach(function(run,ri){
       seq=seq.then(function(){
-        if(run.type==='lock'){ results[ri]={coords:run.geom.coords, dist:run.geom.dist, asc:run.geom.asc, locked:true}; return; }
+        if(run.type==='lock'){ results[ri]={coords:run.geom.coords, dist:run.geom.dist, asc:run.geom.asc, locked:true, anSegs:run.geom.an||null}; return; }
         var wps=waypoints.slice(run.a, run.b+1);
         return routeRun(wps, run.eng).then(function(res){ results[ri]=res; })
           .catch(function(){                       // sichtbarer Fallback: dieser Abschnitt als Luftlinie
@@ -1039,13 +1369,17 @@
     });
     seq.then(function(){
       if(myId!==routeSeq) return;                    // veraltete Anfrage — verwerfen
-      var all=[], dist=0, asc=0, fb=0;
+      var all=[], dist=0, asc=0, fb=0, time=0, segMsgs=[];
       results.forEach(function(res,ri){
         if(!res) return;
         var cs=res.coords; if(ri>0 && cs.length) cs=cs.slice(1);
-        all=all.concat(cs); dist+=res.dist||0; asc+=res.asc||0; if(res.fallback) fb++;
+        all=all.concat(cs); dist+=res.dist||0; asc+=res.asc||0; time+=res.time||0; if(res.fallback) fb++;
+        if(res.msgs) segMsgs=segMsgs.concat(parseMessages(res.msgs));
+        else if(res.anSegs) segMsgs=segMsgs.concat(res.anSegs);        // gesperrtes Bein: Analyse aus dem Lock-Cache
       });
-      routeDist=dist; routeAsc=asc; drawRoute(all,false); updateStats();
+      routeDist=dist; routeAsc=asc; routeTime=time;
+      routeMessages = segMsgs; buildAnalysis();       // zeigt die abgedeckten Abschnitte + Hinweis auf den Rest
+      drawRoute(all,false); updateStats();
       setStatus((fb?('⚠ '+fb+' Abschnitt(e) per Luftlinie überbrückt · '):'')+
         overrideSections().length+' Sonderprofil(e) · '+lockSections().length+' gesperrt · '+
         (dist/1000).toFixed(1)+' km · '+Math.round(asc)+' Hm', fb?'err':'');
@@ -1054,7 +1388,7 @@
 
   function doRoute(){
     clearStages();
-    if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0;updateStats();
+    if(waypoints.length<2){ clearRouteGeom(); routeDist=0;routeAsc=0; setRouteMeta(null,0); updateStats();
       setStatus(waypoints.length?'Ein Wegpunkt gesetzt — setze einen weiteren.':'Bereit. Für Wegpunkte „Route zeichnen" in der Toolleiste aktivieren.'); return; }
     var myId=++routeSeq;                              // diese Anfrage markieren
     if(hasOverrides()||hasLocks()){ doSegmentedRoute(myId); return; }
@@ -1152,11 +1486,17 @@
 
   /* ---------------- Overpass: camping & supply ---------------- */
   function overpass(query){
-    var endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+    // Mehrere Spiegel: der offizielle Server ist oft überlastet/rate-limited.
+    // Client-Timeout je Server (20 s), damit hängende Anfragen schnell zum nächsten Spiegel wechseln.
+    var endpoints=['https://overpass-api.de/api/interpreter',
+                   'https://overpass.kumi.systems/api/interpreter',
+                   'https://overpass.private.coffee/api/interpreter',
+                   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
     function tryEp(i){
-      return fetch(endpoints[i],{method:'POST',body:'data='+encodeURIComponent(query)})
-        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-        .catch(function(e){ if(i+1<endpoints.length) return tryEp(i+1); throw e; });
+      var ctrl=new AbortController(), to=setTimeout(function(){ ctrl.abort(); }, 20000);
+      return fetch(endpoints[i],{method:'POST',body:'data='+encodeURIComponent(query),signal:ctrl.signal})
+        .then(function(r){ clearTimeout(to); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .catch(function(e){ clearTimeout(to); if(i+1<endpoints.length) return tryEp(i+1); throw e; });
     }
     return tryEp(0);
   }
@@ -1196,7 +1536,7 @@
         campMarkers.push(poiMarker(c[0],c[1],'🏕️','#3f5e36',el.tags&&el.tags.name,'Campingplatz')); n++; });
       if(n){ btn.classList.add('active'); }
       setStatus(n?(n+' Campingplätze geladen — erneut klicken blendet sie wieder aus.'):'Keine Campingplätze in diesem Ausschnitt gefunden.');
-    }).catch(function(){ setStatus('Overpass nicht erreichbar — später erneut versuchen.','err'); });
+    }).catch(function(){ setStatus('Overpass gerade überlastet oder nicht erreichbar (öffentliche Server, alle Spiegel probiert). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
   }
   function loadSupply(){
     var btn=document.getElementById('supBtn');
@@ -1219,7 +1559,7 @@
         n++; });
       if(n){ btn.classList.add('active'); }
       setStatus(n?(n+' Versorgungspunkte geladen — erneut klicken blendet sie wieder aus.'):'Keine Versorgungspunkte in diesem Ausschnitt.');
-    }).catch(function(){ setStatus('Overpass nicht erreichbar — später erneut versuchen.','err'); });
+    }).catch(function(){ setStatus('Overpass gerade überlastet oder nicht erreichbar (öffentliche Server, alle Spiegel probiert). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
   }
 
   /* ---------------- GPX import ---------------- */
@@ -1313,31 +1653,33 @@
      Bewusster Bruch mit „kein localStorage": expliziter Speichern-Button + Auto-Laden
      des letzten Stands beim Öffnen. */
   var STORE_KEY='waypoint_route_v1';
+  // Der komplette Planungs-Stand als reines Objekt — genutzt von localStorage-Save UND Datei-Export,
+  // damit beide garantiert identisch sind.
+  function buildStateObject(){
+    var ctr=map.getCenter();
+    return { v:1,
+      profile:document.getElementById('profile').value,
+      customProfile:document.getElementById('customProfile').value,
+      ghKey:document.getElementById('ghKey').value,
+      interval:document.getElementById('interval').value,
+      gradientMode:gradientMode,
+      tune:tune,
+      lyrCycle:document.getElementById('lyrCycle').checked,
+      lyrTopo:document.getElementById('lyrTopo').checked,
+      view:{c:[ctr.lat,ctr.lng], z:map.getZoom()},
+      waypoints:waypoints.map(function(w){return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile,lock:w.lock};}),
+      nogos:nogos.map(function(n){return {lat:n.lat,lng:n.lng,radius:n.radius};}),
+      pois:pois.map(function(p){return {lat:p.lat,lng:p.lng,name:p.name};})
+    };
+  }
   function saveState(silent){
     try{
-      var ctr=map.getCenter();
-      var data={ v:1,
-        profile:document.getElementById('profile').value,
-        customProfile:document.getElementById('customProfile').value,
-        ghKey:document.getElementById('ghKey').value,
-        interval:document.getElementById('interval').value,
-        gradientMode:gradientMode,
-        tune:tune,
-        lyrCycle:document.getElementById('lyrCycle').checked,
-        lyrTopo:document.getElementById('lyrTopo').checked,
-        view:{c:[ctr.lat,ctr.lng], z:map.getZoom()},
-        waypoints:waypoints.map(function(w){return {lat:w.lat,lng:w.lng,name:w.name,legProfile:w.legProfile,lock:w.lock};}),
-        nogos:nogos.map(function(n){return {lat:n.lat,lng:n.lng,radius:n.radius};}),
-        pois:pois.map(function(p){return {lat:p.lat,lng:p.lng,name:p.name};})
-      };
-      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORE_KEY, JSON.stringify(buildStateObject()));
       if(!silent) setStatus('Routendaten gespeichert ('+waypoints.length+' WP) — werden beim nächsten Öffnen automatisch geladen.');
     }catch(e){ setStatus('Speichern fehlgeschlagen ('+(e.message||e)+'). Bei file:// kann der Browser localStorage sperren, gesperrte Abschnitte können das Limit sprengen.','err'); }
   }
-  function loadState(){
-    var raw; try{ raw=localStorage.getItem(STORE_KEY); }catch(e){ return false; }
-    if(!raw) return false;
-    var d; try{ d=JSON.parse(raw); }catch(e){ return false; }
+  // Wendet ein Zustands-Objekt an (in leeren Zustand). Genutzt von localStorage-Load UND Datei-Import.
+  function applyStateObject(d){
     if(!d || !d.waypoints || !d.waypoints.length) return false;
     if(d.profile){ var sel=document.getElementById('profile'); sel.value=d.profile; globalProfileValue=sel.value; }
     if(d.customProfile!=null) document.getElementById('customProfile').value=d.customProfile;
@@ -1350,13 +1692,45 @@
     if(d.lyrCycle){ document.getElementById('lyrCycle').checked=true; map.addLayer(cycle); }
     if(d.lyrTopo){ document.getElementById('lyrTopo').checked=true; map.removeLayer(osm); map.addLayer(topo); }
     gradientMode=!!d.gradientMode; document.getElementById('tGradient').classList.toggle('active',gradientMode);
-    if(d.tune){ tune=d.tune; if(typeof syncTuneUI==='function') syncTuneUI(); }
+    if(d.tune){ tune=Object.assign(defaultTune(), d.tune); if(typeof syncTuneUI==='function') syncTuneUI(); }
     reindexWaypoints(); updateSegPanel();
-    if(d.view && d.view.c){ map.setView(d.view.c, d.view.z); }
-    else map.fitBounds(L.latLngBounds(waypoints.map(function(w){return [w.lat,w.lng];})),{padding:[55,55]});
+    // Beim Laden immer die ganze Route zeigen (≈ ganz Deutschland), statt den gespeicherten Zoom.
+    if(waypoints.length>1) map.fitBounds(L.latLngBounds(waypoints.map(function(w){return [w.lat,w.lng];})),{padding:[60,60]});
+    else if(waypoints.length) map.setView([waypoints[0].lat,waypoints[0].lng], 12);
     recompute();
+    return true;
+  }
+  function loadState(){
+    var raw; try{ raw=localStorage.getItem(STORE_KEY); }catch(e){ return false; }
+    if(!raw) return false;
+    var d; try{ d=JSON.parse(raw); }catch(e){ return false; }
+    if(!applyStateObject(d)) return false;
     setStatus('Letzter gespeicherter Stand geladen ('+waypoints.length+' Wegpunkte).');
     return true;
+  }
+
+  /* ---- Geräte-Sync: kompletten Zustand als Datei exportieren / importieren ---- */
+  function exportState(){
+    try{
+      if(!waypoints.length){ setStatus('Nichts zu exportieren — erst eine Route planen.','err'); return; }
+      var blob=new Blob([JSON.stringify(buildStateObject())],{type:'application/json'});
+      var url=URL.createObjectURL(blob), a=document.createElement('a');
+      var dt=new Date(), pad=function(n){return String(n).padStart(2,'0');};
+      a.download='waypoint-route-'+dt.getFullYear()+pad(dt.getMonth()+1)+pad(dt.getDate())+'-'+pad(dt.getHours())+pad(dt.getMinutes())+'.json';
+      a.href=url; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      setStatus('Zustand exportiert ('+waypoints.length+' WP) — Datei aufs andere Gerät übertragen und dort importieren.');
+    }catch(e){ setStatus('Export fehlgeschlagen: '+(e.message||e),'err'); }
+  }
+  function importStateText(txt){
+    var d; try{ d=JSON.parse(txt); }catch(e){ setStatus('Import fehlgeschlagen: keine gültige Zustands-Datei (kein JSON).','err'); return; }
+    if(!d || !d.waypoints || !d.waypoints.length){ setStatus('Import fehlgeschlagen: keine Wegpunkte in der Datei.','err'); return; }
+    clearAll();                                  // Snapshot + leeren (per Undo rücknehmbar)
+    if(applyStateObject(d)){
+      saveState(true);                           // sofort lokal sichern → bleibt beim Neuladen
+      setStatus('Zustand importiert ('+waypoints.length+' WP) und lokal gespeichert.');
+      backfillLockAnalysis();                     // fehlende Analyse-Daten importierter Locks nachladen
+    } else setStatus('Import fehlgeschlagen.','err');
   }
   /* Einmaliger Reset auf das Ausgangs-Preset: gespeicherten Stand löschen, alles leeren,
      Ansicht/Profil auf Standard, dann PRESET laden. */
@@ -1365,7 +1739,7 @@
     try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     clearAll();
     var sel=document.getElementById('profile'); sel.value='brouter|trekking'; globalProfileValue=sel.value; updateProfileAuxFields();
-    tune={forest:false,noise:false,avoid:false,cycle:false,river:false,town:false,uphill:0}; syncTuneUI();
+    tune=defaultTune(); syncTuneUI();
     if(gradientMode){ gradientMode=false; document.getElementById('tGradient').classList.remove('active'); }
     if(document.getElementById('lyrTopo').checked){ document.getElementById('lyrTopo').checked=false; map.removeLayer(topo); map.addLayer(osm); }
     if(map.hasLayer(cycle)) map.removeLayer(cycle);
@@ -1406,13 +1780,15 @@
   document.getElementById('ghKey').oninput=function(){ recompute(); };
 
   /* ---- Feinabstimmung (Profil-Parameter) ---- */
-  var tuneMap={tuneForest:'forest',tuneNoise:'noise',tuneAvoid:'avoid',tuneCycle:'cycle',tuneRiver:'river',tuneTown:'town'};
+  var tuneMap={tuneForest:'forest',tuneNoise:'noise',tuneAvoid:'avoid',tuneCycle:'cycle',tuneRiver:'river',tuneTown:'town',
+    tuneElevation:'elevation',tuneTraffic:'traffic',tuneIgnoreCr:'ignorecr',tuneProposedCr:'proposedcr',
+    tuneSteps:'steps',tuneFerries:'ferries',tuneBeeline:'beeline'};
   function readTuneUI(){
     var t={}; Object.keys(tuneMap).forEach(function(id){ t[tuneMap[id]]=!!document.getElementById(id).checked; });
     t.uphill=parseInt(document.getElementById('tuneUphill').value,10)||0; return t;
   }
   function writeTuneUI(t){
-    t=t||{};
+    t=Object.assign(defaultTune(), t||{});   // fehlende (alte) Keys → Profil-Defaults (steps/ferries/elevation AN)
     Object.keys(tuneMap).forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=!!t[tuneMap[id]]; });
     var u=document.getElementById('tuneUphill'); if(u){ u.value=t.uphill||0; document.getElementById('tuneUphillVal').textContent=t.uphill||0; }
   }
@@ -1438,6 +1814,12 @@
   document.getElementById('gpxFile').onchange=function(e){ var f=e.target.files[0]; if(!f)return;
     var rd=new FileReader(); rd.onload=function(){ loadGpxText(rd.result); }; rd.readAsText(f); };
 
+  document.getElementById('stateExportBtn').onclick=exportState;
+  document.getElementById('stateImportBtn').onclick=function(){ document.getElementById('stateFile').click(); };
+  document.getElementById('stateFile').onchange=function(e){ var f=e.target.files[0]; if(!f)return;
+    var rd=new FileReader(); rd.onload=function(){ importStateText(rd.result); }; rd.readAsText(f);
+    e.target.value=''; };   // erlaubt erneuten Import derselben Datei
+
   function clearAll(){
     if(waypoints.length) snapshot();
     waypoints.forEach(function(w){map.removeLayer(w.marker);}); waypoints=[];
@@ -1448,7 +1830,7 @@
     document.getElementById('campBtn').classList.remove('active');
     document.getElementById('supBtn').classList.remove('active');
     if(radiusCircle){map.removeLayer(radiusCircle);radiusCircle=null;}
-    clearRouteGeom(); clearStages(); routeDist=0;routeAsc=0;updateStats();
+    clearRouteGeom(); clearStages(); routeDist=0;routeAsc=0; setRouteMeta(null,0); updateStats();
     reindexWaypoints(); updateSegPanel(); setStatus('Routendaten gelöscht.');
   }
   function delLast(){ if(!waypoints.length)return; snapshot(); var w=waypoints.pop(); map.removeLayer(w.marker); reindexWaypoints(); recompute(); }
@@ -1515,9 +1897,30 @@
     if(e.target.checked){ map.removeLayer(osm); map.addLayer(topo);} else { map.removeLayer(topo); map.addLayer(osm);} };
   document.getElementById('lyrGpx').onchange=function(e){ if(!gpxLayer)return; e.target.checked?map.addLayer(gpxLayer):map.removeLayer(gpxLayer); };
 
-  document.getElementById('minBtn').onclick=function(){
+  function togglePanelMin(){
     var p=document.getElementById('panel'); p.classList.toggle('min');
-    this.textContent=p.classList.contains('min')?'+':'–'; };
+    document.getElementById('minBtn').textContent=p.classList.contains('min')?'+':'–';
+  }
+  document.getElementById('minBtn').onclick=togglePanelMin;
+  // Phone: Sheet per Wischen am Kopf auf-/zuziehen (hoch = auf, runter = zu, kurzer Tipp = umschalten).
+  (function(){
+    var head=document.querySelector('#panel .head'), sy=null;
+    head.addEventListener('pointerdown',function(e){
+      if(!window.matchMedia('(max-width:640px)').matches) return;
+      if(e.target.closest('button,input,select,a')) return;
+      sy=e.clientY;
+      try{head.setPointerCapture(e.pointerId);}catch(_){}
+    });
+    head.addEventListener('pointerup',function(e){
+      if(sy===null) return;
+      var dy=e.clientY-sy, p=document.getElementById('panel'); sy=null;
+      if(dy>22)      p.classList.add('min');       // runter → einklappen
+      else if(dy<-22)p.classList.remove('min');    // hoch → ausklappen
+      else           p.classList.toggle('min');    // kurzer Tipp → umschalten
+      document.getElementById('minBtn').textContent=p.classList.contains('min')?'+':'–';
+    });
+    head.addEventListener('pointercancel',function(){sy=null;});
+  })();
 
   /* ---- Toolleiste ein-/ausklappen ---- */
   document.getElementById('tbCollapse').onclick=function(){
@@ -1530,6 +1933,7 @@
     var sx,sy,ox,oy,drag=false;
     handle.addEventListener('pointerdown',function(e){
       if(e.target.closest('button,input,select,a')) return;   // Bedienelemente nicht blockieren
+      if(window.matchMedia('(max-width:640px)').matches) return; // Phone: Panels fest angedockt
       drag=true;
       var r=el.getBoundingClientRect();
       el.style.left=r.left+'px'; el.style.top=r.top+'px';
@@ -1551,6 +1955,13 @@
   }
   makeDraggable(document.getElementById('panel'),   document.querySelector('#panel .head'));
   makeDraggable(document.getElementById('toolbar'), document.getElementById('tbGrip'));
+  makeDraggable(document.getElementById('analysisPanel'), document.getElementById('apGrip'));
+  document.getElementById('apCollapse').onclick=function(){
+    var a=document.getElementById('analysisPanel'); a.classList.toggle('min');
+    this.textContent=a.classList.contains('min')?'+':'–'; fitAnalysisHeight(); };
+  // Höhe an Legende anpassen: nach dem Verschieben und bei Fenster-Änderung
+  document.getElementById('apGrip').addEventListener('pointerup', fitAnalysisHeight);
+  window.addEventListener('resize', fitAnalysisHeight);
 
   /* drag & drop GPX anywhere */
   var dz=document.getElementById('drop');
@@ -1592,6 +2003,17 @@
   }
   // Gespeicherten Stand bevorzugt laden; sonst den 19-Wegpunkte-Entwurf als Start.
   if(!loadState()) loadPreset();
+  // Einmalig fehlende Analyse-Daten für „alte" gesperrte Abschnitte nachladen (Geometrie bleibt fix).
+  backfillLockAnalysis();
+
+  /* ---- PWA: Service-Worker registrieren (nur über https/localhost, nicht file://) ---- */
+  if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js').catch(function(err){
+        console.warn('Service-Worker-Registrierung fehlgeschlagen:',err);
+      });
+    });
+  }
 
 })();
 </script>
