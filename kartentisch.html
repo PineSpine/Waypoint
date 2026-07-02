@@ -327,6 +327,12 @@
   .nogo-pin{background:#c62828;color:#fff}
   .poi-pin{background:#7a4ad0;color:#fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
   .poi-pin span{transform:rotate(45deg)}
+  /* Long-Press-Tooltip für Toolbar-Icons (Touch-Ersatz für das Desktop-Hover) */
+  #tbTip{position:fixed;z-index:3000;display:none;pointer-events:none;max-width:74vw;
+    padding:7px 11px;border-radius:12px;font-family:'Onest',sans-serif;font-size:12.5px;line-height:1.35;color:var(--ink);
+    background:linear-gradient(160deg,rgba(255,255,255,.85),rgba(224,240,255,.72));
+    -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid var(--edge);box-shadow:0 12px 32px var(--shadow),inset 0 1px 0 rgba(255,255,255,.85)}
   /* ============================================================
      MOBILE / TOUCH — responsives Layout (eine Datei, Desktop unberührt)
      ============================================================ */
@@ -354,7 +360,7 @@
     #panel{
       left:0!important; right:0!important; bottom:0!important; top:auto!important;
       width:100%!important; max-width:100%!important;
-      max-height:50vh; border-radius:24px 24px 0 0;
+      max-height:40vh; border-radius:24px 24px 0 0;
       padding-bottom:env(safe-area-inset-bottom);
       animation:none;   /* keine transform-Einblendung → Ruheposition hängt nie an einer Animation */
     }
@@ -430,18 +436,18 @@
       <div class="sec-h">Routing</div>
       <label class="fld" for="profile">Engine &amp; Fahrprofil</label>
       <select id="profile">
-        <optgroup label="1) BRouter.de · Open Source">
-          <option value="brouter|trekking" selected>Trekking — Tour, gemischter Belag</option>
-          <option value="brouter|fastbike">Schnell — bevorzugt Asphalt</option>
-          <option value="brouter|shortest">Kürzeste Strecke</option>
+        <optgroup label="① BRouter.de">
+          <option value="brouter|trekking" selected>🚲 Trekking — gemischt</option>
+          <option value="brouter|fastbike">⚡ Schnell — Asphalt</option>
+          <option value="brouter|shortest">📏 Kürzeste</option>
         </optgroup>
-        <optgroup label="2) bikerouter-Gravel (Upload → BRouter.de)">
-          <option value="upload|quaelnix-gravel">🪨 Gravel „quaelnix" — echtes Profil, verifizierter Server</option>
-          <option value="__custom__">⌨️ Eigenes bikerouter-Profil (m11n, evtl. CORS) …</option>
+        <optgroup label="② Gravel (Upload)">
+          <option value="upload|quaelnix-gravel">🪨 Gravel „quaelnix"</option>
+          <option value="__custom__">⌨️ Eigenes Profil …</option>
         </optgroup>
-        <optgroup label="3) GraphHopper · Komoot-Engine (eigener Key)">
-          <option value="graphhopper|bike">🚲 Fahrrad (bike) — Komoot-Stil, mehrpunktfähig</option>
-          <option value="graphhopper|foot">🥾 Wandern (foot)</option>
+        <optgroup label="③ GraphHopper (Key)">
+          <option value="graphhopper|bike">🚴 Fahrrad (Komoot)</option>
+          <option value="graphhopper|foot">🥾 Wandern</option>
         </optgroup>
       </select>
       <input type="text" id="customProfile" placeholder="bikerouter-Profilname, z. B. cxb-gravel, mtb-light …" style="display:none;margin-top:7px;width:100%" />
@@ -1962,6 +1968,36 @@
   // Höhe an Legende anpassen: nach dem Verschieben und bei Fenster-Änderung
   document.getElementById('apGrip').addEventListener('pointerup', fitAnalysisHeight);
   window.addEventListener('resize', fitAnalysisHeight);
+
+  /* ---- Long-Press auf Toolbar-Icons → Beschriftung anzeigen (Touch-Ersatz fürs Hover) ---- */
+  (function(){
+    var tb=document.getElementById('toolbar'); if(!tb) return;
+    var tip=document.createElement('div'); tip.id='tbTip'; document.body.appendChild(tip);
+    var timer=null, longPressed=false, sx=0, sy=0;
+    function showTip(btn){
+      var t=btn.getAttribute('title'); if(!t) return;
+      tip.textContent=t; tip.style.display='block';
+      var r=btn.getBoundingClientRect(), tw=tip.offsetWidth;
+      tip.style.left=Math.round(Math.max(6, Math.min(r.left+r.width/2-tw/2, window.innerWidth-tw-6)))+'px';
+      tip.style.top=Math.round(r.bottom+8)+'px';
+    }
+    function hideTip(){ tip.style.display='none'; }
+    function cancelTimer(){ if(timer){ clearTimeout(timer); timer=null; } }
+    tb.addEventListener('pointerdown',function(e){
+      var btn=e.target.closest('.tb-btn'); if(!btn) return;
+      if(e.pointerType==='mouse') return;            // Desktop: natives title-Hover reicht
+      longPressed=false; sx=e.clientX; sy=e.clientY; cancelTimer();
+      timer=setTimeout(function(){ longPressed=true; showTip(btn); }, 430);
+    });
+    tb.addEventListener('pointermove',function(e){
+      if(timer && (Math.abs(e.clientX-sx)>8 || Math.abs(e.clientY-sy)>8)) cancelTimer();  // Wischen/Scrollen → kein Long-Press
+    });
+    tb.addEventListener('pointerup',function(){ cancelTimer(); if(longPressed) setTimeout(hideTip,850); else hideTip(); });
+    tb.addEventListener('pointercancel',function(){ cancelTimer(); hideTip(); longPressed=false; });
+    tb.addEventListener('pointerleave',cancelTimer);
+    // War es ein Long-Press, den folgenden Klick (die Aktion) unterdrücken:
+    tb.addEventListener('click',function(e){ if(longPressed){ e.stopImmediatePropagation(); e.preventDefault(); longPressed=false; } }, true);
+  })();
 
   /* drag & drop GPX anywhere */
   var dz=document.getElementById('drop');

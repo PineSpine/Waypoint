@@ -19,10 +19,13 @@
 ## Die App
 - **Eine einzige, selbst-enthaltene HTML-Datei:** `kartentisch.html`. Kein Build-Step.
 - **Responsive (Desktop + Mobile in EINER Datei):** Media-Queries `@media (max-width:640px)` +
-  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet** (max. 50vh, per Wischen
+  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet** (max. 40vh, per Wischen
   am Kopf auf-/zuziehen — hoch=auf, runter=zu, Tipp=umschalten; kein +/-Button), Toolbar =
-  horizontale, eingerückte Wisch-Leiste oben (Scroll-Fade rechts). Panel-Ziehen ist auf dem Phone
-  deaktiviert (`makeDraggable` bricht bei `matchMedia('(max-width:640px)')` ab). Arbeit läuft auf
+  horizontale, eingerückte Wisch-Leiste oben (Scroll-Fade rechts). **Long-Press auf Toolbar-Icons**
+  zeigt die Beschriftung (`#tbTip`, Touch-Ersatz fürs Hover; unterdrückt die Aktion bei langem Halten).
+  Profil-Dropdown-Labels sind kompakt (Emoji + Kurzname; Details im „kurz erklärt"-Hinweis).
+  Panel-Ziehen ist auf dem Phone deaktiviert (`makeDraggable` bricht bei
+  `matchMedia('(max-width:640px)')` ab). Arbeit läuft auf
   Branch **`mobile`**; Desktop-Stand als Backup unter `Backup/`. Siehe Memory `mobile-pwa-direction`.
 - **PWA:** `manifest.webmanifest` (relative Pfade → GitHub-Pages-Unterpfad-fest), `sw.js`
   (Service-Worker: HTML=network-first → nie veraltet, Assets=cache-first, CDN=stale-while-revalidate),
