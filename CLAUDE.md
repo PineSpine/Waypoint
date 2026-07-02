@@ -31,7 +31,9 @@
   (Service-Worker: HTML=network-first → nie veraltet, Assets=cache-first, CDN=stale-while-revalidate),
   Icons `icon.svg` + `icon-192/512-.png` + `icon-maskable-512.png` (per Browser-Canvas gerastert;
   PNG-Icons per `!`-Ausnahme in `.gitignore` freigegeben). SW registriert nur über https/localhost.
-  Hosting via GitHub Pages ist geplant, aber **noch offen**.
+  **Live via GitHub Pages:** Repo `PineSpine/Waypoint` (Branch `master`, öffentlich), URL
+  <https://pinespine.github.io/Waypoint/> (`index.html` leitet auf `kartentisch.html`). `git push`
+  auf `master` aktualisiert die Live-Seite automatisch (~1 Min).
 - **Stack:** Leaflet 1.9.4 (nur via cdnjs), OSM-Basiskarte + OpenTopoMap-Umschalter,
   Waymarked-Trails-Radnetz-Overlay (default aus), **dynamischer Maßstab** (`L.control.scale`,
   rechts unten links neben der Legende). Fonts: Onest + DM Mono (Google Fonts).
@@ -140,8 +142,12 @@
 4. Erst dann ausliefern.
 
 ## Offen / als Nächstes
-- **Hosting via GitHub Pages** noch offen (fürs Handy per https + PWA-Installation). `gh` CLI nicht
-  installiert, Git-Identität lokaler Platzhalter, kein Remote. Bis dahin Test via WLAN-URL
-  (`http://<PC-IP>:8080/kartentisch.html`) — SW/PWA-Install + Geolocation gehen dort nicht (kein https).
+- **Hosting erledigt:** live via GitHub Pages (`PineSpine/Waypoint`, Branch `master`) →
+  <https://pinespine.github.io/Waypoint/>. `git push` auf `master` aktualisiert automatisch.
+  `gh` CLI weiterhin nicht installiert; Push läuft über Git Credential Manager (Browser-Login).
+  Git-Identität ist lokaler Platzhalter (`ralon@kartentisch.local`) → Commits nicht mit dem
+  GitHub-Konto verknüpft (nur kosmetisch).
+- **Route vom alten Origin (file:// bzw. WLAN) auf die Pages-URL übertragen:** localStorage ist
+  pro Origin → auf der Live-Seite startet der Preset. Per „Geräte-Sync" (Export/Import) rüberholen.
 - Lückenschlüsse Saalfeld→Lichtenfels und Donau→Burghausen sauber routen.
 - Weiteres Iterieren an der App, Richtung Tour.
