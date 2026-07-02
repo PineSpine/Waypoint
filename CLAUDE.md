@@ -52,8 +52,9 @@
   Blau/Weiß-Palette. Akzent `#0a84ff` / `#0060df`, Routenlinie `#1f6fff`.
 - **Kein Preset — die App startet blank** (für fremde Besucher der Live-Seite). `startBlank()` zeigt
   nur einen Willkommens-Hinweis; das frühere 19-Wegpunkte-Array (`PRESET`/`loadPreset`) wurde entfernt
-  (steckt bei Bedarf noch in der Git-Historie). Der Toolbar-Button „Zurücksetzen" (`resetToPreset`,
-  Name beibehalten) leert jetzt alles auf leeren Start statt ein Preset zu laden.
+  (steckt bei Bedarf noch in der Git-Historie). Auch der frühere „Zurücksetzen"-Button (`resetToPreset`)
+  wurde als redundant entfernt — Route leeren erledigt „Routendaten löschen" (`clearAll`, weicher
+  In-Memory-Clear, lässt den *gespeicherten* Stand + Einstellungen unangetastet, undo-bar).
 - Funktionen: Klick-Wegpunkte (ziehbar), debounctes Re-Routing, Etappen-Marker alle X km,
   Overpass-Loader (Camping/Supermarkt/Wasser/Radladen mit Google-Maps-Links),
   GPX-Import (Drag&Drop) + GPX-Export, Steigungscodierung, No-Go-Kreise, POIs, Bewegungsradius.
@@ -127,7 +128,7 @@
   Zoom In · Zoom Out · Standort · Suche · | · No-Go-Kreis · Bewegungsradius (ohne Gewähr) · POI ·
   | · Route zeichnen · Wegpunkt einfügen · Route umkehren · Abschnitts-Profil ·
   letzten Punkt löschen · Abschnitt sperren · Routendaten speichern · Routendaten löschen ·
-  Zurücksetzen (leer neu beginnen) · Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
+  Steigungscodierung · letzte Aktion rückgängig · Transparenz-Slider.
   (Karten-Annotationen oben gruppiert, alle Routing-/Routendaten-Funktionen darunter.)
 - Hauptpanel, Toolleiste **und** Streckenanalyse-Register: alle **frei verschiebbar und einklappbar**.
 - Keine redundanten Bedienelemente doppeln (z. B. „Route leeren" lebt in der Toolleiste, nicht im Panel).
