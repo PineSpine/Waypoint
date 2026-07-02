@@ -363,7 +363,10 @@
       max-height:45vh; border-radius:24px 24px 0 0;
       padding-bottom:env(safe-area-inset-bottom);
       animation:none;   /* keine transform-Einblendung → Ruheposition hängt nie an einer Animation */
+      transition:max-height .28s cubic-bezier(.2,.8,.2,1);   /* sanftes Einrasten zwischen den Stufen */
     }
+    /* Dritte Stufe „Voll": reicht bis knapp unter die obere Toolleiste */
+    #panel.full{max-height:calc(100dvh - env(safe-area-inset-top) - 82px)}
     /* Griff-Bar am oberen Sheet-Rand — zugleich die Wisch-Fläche */
     #panel .head{padding-top:24px;cursor:default;touch-action:none}
     #panel .head::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);
@@ -1891,9 +1894,18 @@
     document.getElementById('minBtn').textContent=p.classList.contains('min')?'+':'–';
   }
   document.getElementById('minBtn').onclick=togglePanelMin;
-  // Phone: Sheet per Wischen am Kopf auf-/zuziehen (hoch = auf, runter = zu, kurzer Tipp = umschalten).
+  // Phone: Sheet per Wischen am Kopf in 3 Stufen (Peek → 45vh → Voll).
+  // Hoch = eine Stufe auf, runter = eine Stufe zu, kurzer Tipp = Peek ↔ 45vh.
   (function(){
     var head=document.querySelector('#panel .head'), sy=null;
+    function stateOf(p){ return p.classList.contains('min')?0:(p.classList.contains('full')?2:1); }
+    function setSheetState(s){
+      s=Math.max(0,Math.min(2,s));
+      var p=document.getElementById('panel');
+      p.classList.toggle('min', s===0);
+      p.classList.toggle('full', s===2);
+      document.getElementById('minBtn').textContent = s===0 ? '+' : '–';
+    }
     head.addEventListener('pointerdown',function(e){
       if(!window.matchMedia('(max-width:640px)').matches) return;
       if(e.target.closest('button,input,select,a')) return;
@@ -1902,11 +1914,10 @@
     });
     head.addEventListener('pointerup',function(e){
       if(sy===null) return;
-      var dy=e.clientY-sy, p=document.getElementById('panel'); sy=null;
-      if(dy>22)      p.classList.add('min');       // runter → einklappen
-      else if(dy<-22)p.classList.remove('min');    // hoch → ausklappen
-      else           p.classList.toggle('min');    // kurzer Tipp → umschalten
-      document.getElementById('minBtn').textContent=p.classList.contains('min')?'+':'–';
+      var dy=e.clientY-sy, st=stateOf(document.getElementById('panel')); sy=null;
+      if(dy<-22)      setSheetState(st+1);         // hoch → eine Stufe auf
+      else if(dy>22)  setSheetState(st-1);         // runter → eine Stufe zu
+      else            setSheetState(st===0?1:0);   // kurzer Tipp → Peek ↔ 45vh
     });
     head.addEventListener('pointercancel',function(){sy=null;});
   })();

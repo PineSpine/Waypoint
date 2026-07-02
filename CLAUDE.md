@@ -19,8 +19,10 @@
 ## Die App
 - **Eine einzige, selbst-enthaltene HTML-Datei:** `kartentisch.html`. Kein Build-Step.
 - **Responsive (Desktop + Mobile in EINER Datei):** Media-Queries `@media (max-width:640px)` +
-  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet** (max. 45vh, per Wischen
-  am Kopf auf-/zuziehen — hoch=auf, runter=zu, Tipp=umschalten; kein +/-Button), Toolbar =
+  `@media (pointer:coarse)`. Auf dem Phone: Hauptpanel = **Bottom-Sheet mit 3 Stufen**
+  (Peek ~Kopf → 45vh → Voll `calc(100dvh - env(safe-area-inset-top) - 82px)`, endet knapp unter der
+  Toolleiste), per Wischen am Kopf: hoch = eine Stufe auf, runter = eine Stufe zu, Tipp = Peek↔45vh;
+  kein +/-Button. Zustand über Klassen `.min`/`.full` am `#panel` (`setSheetState`). Toolbar =
   horizontale, eingerückte Wisch-Leiste oben (Scroll-Fade rechts). **Long-Press auf Toolbar-Icons**
   zeigt die Beschriftung (`#tbTip`, Touch-Ersatz fürs Hover; unterdrückt die Aktion bei langem Halten).
   Profil-Dropdown-Labels sind kompakt (Emoji + Kurzname; Details im „kurz erklärt"-Hinweis).
