@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "http-server", ".", "-p", "8080", "-c-1"],
       "port": 8080
+    },
+    {
+      "name": "kartentisch-mobile",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", ".", "-c-1"],
+      "autoPort": true
     }
   ]
 }

@@ -3,6 +3,10 @@
 *.jpg
 *.jpeg
 *.png
+# ... aber die PWA-App-Icons gehören ins Repo (fürs Hosting/Installieren)
+!icon-192.png
+!icon-512.png
+!icon-maskable-512.png
 
 # Backup-Ordner
 Backup/
