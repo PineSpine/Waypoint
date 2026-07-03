@@ -1494,19 +1494,54 @@
 
   /* ---------------- Overpass: camping & supply ---------------- */
   function overpass(query){
-    // Mehrere Spiegel: der offizielle Server ist oft überlastet/rate-limited.
-    // Client-Timeout je Server (20 s), damit hängende Anfragen schnell zum nächsten Spiegel wechseln.
+    // Öffentliche Overpass-Server sind oft überlastet (overpass-api.de liefert dann 504) oder aus
+    // manchen Netzen gar nicht erreichbar (Verbindung hängt). Sie NACHEINANDER zu probieren war der
+    // Fehler: jeder hängende Spiegel kostet den vollen Timeout, bevor der nächste drankommt → im
+    // schlechtesten Fall über eine Minute Wartezeit, obwohl ein funktionierender Spiegel dabei ist.
+    // Deshalb fragen wir jetzt ALLE gleichzeitig an — der erste erfolgreiche gewinnt, langsame oder
+    // tote Spiegel verlieren einfach das Rennen und werden abgebrochen. Real gemessen (Live-Seite,
+    // https): faktisch liefert oft NUR overpass-api.de, und der wirft unter Last gelegentlich einen
+    // 504. Deshalb: kurzer Server-Timeout (12 s) — ein gesunder Spiegel antwortet in 1–3 s, ein 504
+    // kommt bei ~8 s; danach lohnt kein Warten auf hängende Spiegel. Und MEHRERE Anläufe mit kurzer
+    // Pause, damit ein transienter 504 den Nutzer nicht ausbremst (bei ~75 % Trefferquote je Anlauf
+    // → 4 Anläufe ≈ 99,6 %). Die weiteren Spiegel bleiben drin: sie helfen Besuchern, für deren Browser
+    // overpass-api.de gerade 504t, kosten dank kurzem Timeout aber kaum Zeit.
+    // ALLE Endpunkte sind Overpass über dieselbe offene OSM-Datenbank — die Daten sind identisch, nur
+    // der Betreiber unterscheidet sich. Bewusst reputable europäische OSM-Spiegel: overpass-api.de
+    // (offiziell, vom Overpass-Autor), kumi.systems (DE), private.coffee (AT, privacy-fokussiert).
+    // NICHT drin: maps.mail.ru (VK/RU — von Tracker-Blockern weggefiltert, unnötige Abhängigkeit) und
+    // overpass.osm.ch (antwortet zwar schnell, hat aber eine veraltete DB → leere Ergebnisse = Falle).
     var endpoints=['https://overpass-api.de/api/interpreter',
                    'https://overpass.kumi.systems/api/interpreter',
-                   'https://overpass.private.coffee/api/interpreter',
-                   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-    function tryEp(i){
-      var ctrl=new AbortController(), to=setTimeout(function(){ ctrl.abort(); }, 20000);
-      return fetch(endpoints[i],{method:'POST',body:'data='+encodeURIComponent(query),signal:ctrl.signal})
-        .then(function(r){ clearTimeout(to); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-        .catch(function(e){ clearTimeout(to); if(i+1<endpoints.length) return tryEp(i+1); throw e; });
+                   'https://overpass.private.coffee/api/interpreter'];
+    var SERVER_TIMEOUT=12000, RETRIES=3, BACKOFF=1500;
+    function race(){
+      return new Promise(function(resolve,reject){
+        var ctrls=[], done=false, pending=endpoints.length;
+        endpoints.forEach(function(url){
+          var ctrl=new AbortController(); ctrls.push(ctrl);
+          var to=setTimeout(function(){ ctrl.abort(); }, SERVER_TIMEOUT);
+          fetch(url,{method:'POST',body:'data='+encodeURIComponent(query),signal:ctrl.signal})
+            .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+            .then(function(d){
+              clearTimeout(to);
+              if(done) return;
+              done=true;
+              ctrls.forEach(function(c){ try{ c.abort(); }catch(_){} }); // langsamere Spiegel freigeben
+              resolve(d);
+            })
+            .catch(function(e){ clearTimeout(to); if(--pending===0 && !done) reject(e); });
+        });
+      });
     }
-    return tryEp(0);
+    function attempt(left){
+      return race().catch(function(e){
+        if(left<=0) throw e;
+        // Kurze Pause, dann nächster Anlauf — Überlast (504/429) ist meist nur eine Spitze.
+        return new Promise(function(r){ setTimeout(r,BACKOFF); }).then(function(){ return attempt(left-1); });
+      });
+    }
+    return attempt(RETRIES);
   }
   function bboxStr(){
     var b=map.getBounds();
@@ -1544,7 +1579,7 @@
         campMarkers.push(poiMarker(c[0],c[1],'🏕️','#3f5e36',el.tags&&el.tags.name,'Campingplatz')); n++; });
       if(n){ btn.classList.add('active'); }
       setStatus(n?(n+' Campingplätze geladen — erneut klicken blendet sie wieder aus.'):'Keine Campingplätze in diesem Ausschnitt gefunden.');
-    }).catch(function(){ setStatus('Overpass gerade überlastet oder nicht erreichbar (öffentliche Server, alle Spiegel probiert). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
+    }).catch(function(){ setStatus('Overpass gerade überlastet (alle Spiegel gleichzeitig + Wiederholung probiert, keiner antwortete). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
   }
   function loadSupply(){
     var btn=document.getElementById('supBtn');
@@ -1567,7 +1602,7 @@
         n++; });
       if(n){ btn.classList.add('active'); }
       setStatus(n?(n+' Versorgungspunkte geladen — erneut klicken blendet sie wieder aus.'):'Keine Versorgungspunkte in diesem Ausschnitt.');
-    }).catch(function(){ setStatus('Overpass gerade überlastet oder nicht erreichbar (öffentliche Server, alle Spiegel probiert). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
+    }).catch(function(){ setStatus('Overpass gerade überlastet (alle Spiegel gleichzeitig + Wiederholung probiert, keiner antwortete). Näher zoomen (kleinerer Ausschnitt = schnellere Abfrage) und in ~1 Minute erneut versuchen.','err'); });
   }
 
   /* ---------------- GPX import ---------------- */
